@@ -1,0 +1,1042 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;moc;h;def;odl;idl;res;</Extensions>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;moc;h;def;odl;idl;res;</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="basegraphicsscene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="basegraphicsview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bmpblender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bmptotmx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bmptotmxconfirmdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bmptotmxdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\building.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingfloor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingobjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingreader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingroomdef.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingtemplates.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingtiles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingtmx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\buildingwriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="celldocument.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cellscene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cellview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="navigation\chunkdatafile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="chunkmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clipboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\clipper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="colorbutton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="copypastedialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="defaultsfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="document.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="documentmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filesystemwatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fromtodialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\furnituregroups.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generatelotsdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generatelotsfailuredialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gotodialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapcell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapfeaturegenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapimagepyramidwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemappropertiesform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemappropertydialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapreader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapscene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapundo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapwriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameMap\ingamemapwriterbinary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="navigation\isochunk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="navigation\isogridsquare.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="layersdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="layersmodel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lootwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lotfilesmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lotpackwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lotsdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="luatablewriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="luawriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mainwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mapbuildings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mapcomposite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mapimagemanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mapmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mapsdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="newworlddialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="objectgroupsdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="objectsdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="objecttypesdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pngbuildingdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="preferences.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="preferencesdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="progress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="properties.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="propertiesdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="propertydefinitionsdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyenumdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\qtlockedfile\qtlockedfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\qtlockedfile\qtlockedfile_win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resizeworlddialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="road.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="roadsdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingEditor\roofhiding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sceneoverlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scenetools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="searchdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="simplefile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="spawntooldialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="templatesdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="threads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tiledeffile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tilemetainfomgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tilesetmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tilesetstxtfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tmxtobmp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tmxtobmpdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="toolmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="undodock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="undoredo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unknowncolorsdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="waterflow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="worldcell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="worldcellobject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="worlddocument.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="worldreader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="worldscene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="worldview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="worldwriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="writespawnpointsdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="writeworldobjectsdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zoomable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="basegraphicsscene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="basegraphicsview.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="bmpblender.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="bmptotmx.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="bmptotmxconfirmdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="bmptotmxdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\building.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="BuildingEditor\buildingfloor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="BuildingEditor\buildingmap.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\buildingobjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BuildingEditor\buildingreader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BuildingEditor\buildingroomdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="BuildingEditor\buildingtemplates.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="BuildingEditor\buildingtiles.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\buildingtmx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BuildingEditor\buildingwriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="celldocument.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="cellscene.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="cellview.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="navigation\chunkdatafile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="chunkmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="clipboard.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="InGameMap\clipper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="colorbutton.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="copypastedialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="defaultsfile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="document.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="documentmanager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="filesystemwatcher.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="fromtodialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="BuildingEditor\furnituregroups.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="generatelotsdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="generatelotsfailuredialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="gotodialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="InGameMap\ingamemapcell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="InGameMap\ingamemapdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemapfeaturegenerator.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemapimagepyramidwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemappropertiesform.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemappropertydialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="InGameMap\ingamemapreader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="InGameMap\ingamemapscene.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="InGameMap\ingamemapundo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameMap\ingamemapwriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameMap\ingamemapwriterbinary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="navigation\isochunk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="navigation\isogridsquare.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="layersdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="layersmodel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="lootwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="lotfilesmanager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="lotpackwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="lotsdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="luatablewriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="luawriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="mainwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="mapbuildings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="mapcomposite.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="mapimagemanager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="mapmanager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="mapsdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="newworlddialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="objectgroupsdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="objectsdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="objecttypesdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="pngbuildingdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="preferences.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="preferencesdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="progress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="propertiesdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="propertydefinitionsdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="propertyenumdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="..\qtlockedfile\qtlockedfile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="resizeworlddialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="road.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="roadsdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\roofhiding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="sceneoverlay.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="scenetools.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="searchdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="simplefile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="spawntooldialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="templatesdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="threads.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="tiledeffile.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="tilemetainfomgr.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="tilesetmanager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="tilesetstxtfile.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="tmxtobmp.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="tmxtobmpdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="toolmanager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="undodock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="undoredo.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="unknowncolorsdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="waterflow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="world.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="worldcell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="worlddocument.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="worldproperties.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="worldreader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="worldscene.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="worldview.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="worldwriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="writespawnpointsdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="writeworldobjectsdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="zoomable.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include=".moc\moc_predefs.h.cbt">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="bmptotmxconfirmdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="bmptotmxdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="copypastedialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="fromtodialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="generatelotsdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="generatelotsfailuredialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="gotodialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="InGameMap\ingamemapimagepyramidwindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="InGameMap\ingamemappropertiesform.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="InGameMap\ingamemappropertydialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="lootwindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="lotpackwindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="mainwindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="newworlddialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="objectgroupsdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="objecttypesdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="pngbuildingdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="preferencesdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="propertiesdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="propertiesview.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="propertyenumdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="resizeworlddialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="searchdock.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="spawntooldialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="templatesdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="tmxtobmpdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="unknowncolorsdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="writespawnpointsdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="writeworldobjectsdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="images\SpeakerIcon.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\about-tiled-logo.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\add.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\application-exit.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\bmp-tool-select.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\dice.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-export.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-import.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-new.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\document-new.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-open-recent.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\document-open-recent.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-open.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\document-open.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-page-setup.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\document-page-setup.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-properties.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\document-properties.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-save-as.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\document-save-as.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\document-save.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\document-save.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\drive-harddisk.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\drive-harddisk.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-clear.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\edit-clear.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-copy.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\edit-copy.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-cut.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\edit-cut.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-delete.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-paste.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\edit-paste.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-redo.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\edit-redo.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-rename.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\edit-undo.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\edit-undo.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <QtRcc Include="editor.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+    <None Include="images\16x16\go-down.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\go-down.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\go-up.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\go-up.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\help-about.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\help-about.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\idea.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\insert-image.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\insert-object.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\insert-polygon.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\insert-polyline.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\insert-rectangle.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\layer-image.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\layer-object.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\layer-tile-stop.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\layer-tile.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\missing-tile.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\remove.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\road-tool-create.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\road-tool-edit.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\road-tool-select.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\show_hide_others.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\stock-duplicate-16.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\stock-tool-bucket-fill.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\stock-tool-clone.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\stock-tool-eraser.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\stock-tool-rect-select.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\system-run.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\tiled-icon-16.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\tiled-icon-32.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\tool-edit-polygons.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\tool-select-objects.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\22x22\tool-spawn-point.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\window-close.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\zoom-in.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\zoom-in.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\zoom-original.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\zoom-original.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\16x16\zoom-out.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="images\24x24\zoom-out.png">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="worlded.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="images\22x22\point-tool-create.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="images\22x22\road-tool-delete.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

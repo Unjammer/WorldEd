@@ -66,6 +66,7 @@ int Preferences::miniMapWidth() const
     return mMiniMapWidth;
 }
 
+
 bool Preferences::highlightCurrentLevel() const
 {
     return mHighlightCurrentLevel;
@@ -89,7 +90,9 @@ Preferences::Preferences()
     mShowMiniMap = mSettings->value(QLatin1String("ShowMiniMap"), true).toBool();
     mShowZombieSpawnImage = mSettings->value(QLatin1String("ShowZombieSpawnImage"), false).toBool();
     mZombieSpawnImageOpacity = mSettings->value(QLatin1String("ZombieSpawnImageOpacity"), 0.8).toReal();
+   
     mShowZonesInWorldView = mSettings->value(QLatin1String("ShowZonesInWorldView"), false).toBool();
+    mShowZonesWorldInWorldView = mSettings->value(QLatin1String("ShowZonesWorldInWorldView"), false).toBool();
     mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
     mHighlightCurrentLevel = mSettings->value(QLatin1String("HighlightCurrentLevel"),
                                               false).toBool();
@@ -99,6 +102,14 @@ Preferences::Preferences()
     mUseOpenGL = mSettings->value(QLatin1String("OpenGL"), false).toBool();
     mWorldThumbnails = mSettings->value(QLatin1String("WorldThumbnails"), false).toBool();
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
+    mLoadLastActivProject = mSettings->value(QLatin1String("LoadLastActivProject"), true).toBool();
+    menableDarkTheme = mSettings->value(QLatin1String("EnableDarkTheme"), true).toBool();
+    mhsThresholdHP = mSettings->value(QLatin1String("HsThresholdHP"), 1000).toInt();
+    mhsSizeHP = mSettings->value(QLatin1String("HsSizeHP"), 40).toInt();
+    mhsThresholdHT = mSettings->value(QLatin1String("HsThresholdHT"), 100).toInt();
+    mhsSizeHT = mSettings->value(QLatin1String("HsSizeHT"), 4).toInt();
+    mhsThresholdR = mSettings->value(QLatin1String("HsThresholdR"), 10).toInt();
+    mhsSizeR = mSettings->value(QLatin1String("HsSizeR"), 4).toInt();
     mSettings->endGroup();
 
     mSettings->beginGroup(QLatin1String("MapsDirectory"));
@@ -138,6 +149,9 @@ Preferences::Preferences()
     // Use the same directory as TileZed.
     mThumbnailsDirectory = settings.value(QLatin1String("Thumbnails/Directory")).toString();
 }
+
+
+
 
 Preferences::~Preferences()
 {
@@ -322,6 +336,91 @@ void Preferences::setShowAdjacentMaps(bool show)
     emit showAdjacentMapsChanged(mShowAdjacentMaps);
 }
 
+void Preferences::setLoadLastActivProject(bool show)
+{
+    if (mLoadLastActivProject == show)
+        return;
+
+    mLoadLastActivProject = show;
+    mSettings->setValue(QLatin1String("Interface/LoadLastActivProject"), mLoadLastActivProject);
+
+    emit LoadLastActivProject(mLoadLastActivProject);
+}
+
+void Preferences::setenableDarkTheme(bool show)
+{
+    if (menableDarkTheme == show)
+        return;
+
+    menableDarkTheme = show;
+    mSettings->setValue(QLatin1String("Interface/EnableDarkTheme"), menableDarkTheme);
+
+    emit enableDarkTheme(menableDarkTheme);
+}
+
+void Preferences::setHsThresholdHP(int threshold)
+{
+
+    if (mhsThresholdHP == threshold)
+        return;
+
+    mhsThresholdHP = threshold;
+    mSettings->setValue(QLatin1String("Interface/HsThresholdHP"), mhsThresholdHP);
+    emit HsThresholdHP(threshold);
+}
+
+void Preferences::setHsSizeHP(int size)
+{
+    if (mhsSizeHP == size)
+        return;
+
+    mhsSizeHP = size;
+    mSettings->setValue(QLatin1String("Interface/HsSizeHP"), mhsSizeHP);
+    emit HsSizeHP(size);
+}
+
+void Preferences::setHsThresholdHT(int threshold)
+{
+
+    if (mhsThresholdHT == threshold)
+        return;
+
+    mhsThresholdHT = threshold;
+    mSettings->setValue(QLatin1String("Interface/HsThresholdHT"), mhsThresholdHT);
+    emit HsThresholdHT(threshold);
+}
+
+void Preferences::setHsSizeHT(int size)
+{
+    if (mhsSizeHT == size)
+        return;
+
+    mhsSizeHT = size;
+    mSettings->setValue(QLatin1String("Interface/HsSizeHT"), mhsSizeHT);
+    emit HsSizeHT(size);
+}
+
+void Preferences::setHsThresholdR(int threshold)
+{
+
+    if (mhsThresholdR == threshold)
+        return;
+
+    mhsThresholdR = threshold;
+    mSettings->setValue(QLatin1String("Interface/HsThresholdR"), mhsThresholdR);
+    emit HsThresholdR(threshold);
+}
+
+void Preferences::setHsSizeR(int size)
+{
+    if (mhsSizeR == size)
+        return;
+
+    mhsSizeR = size;
+    mSettings->setValue(QLatin1String("Interface/HsSizeR"), mhsSizeR);
+    emit HsSizeR(size);
+}
+
 void Preferences::setShowObjects(bool show)
 {
     if (mShowObjects == show)
@@ -366,6 +465,8 @@ void Preferences::setShowZombieSpawnImage(bool show)
     emit showZombieSpawnImageChanged(mShowZombieSpawnImage);
 }
 
+
+
 void Preferences::setZombieSpawnImageOpacity(qreal opacity)
 {
     opacity = qMin(opacity, 1.0);
@@ -380,6 +481,7 @@ void Preferences::setZombieSpawnImageOpacity(qreal opacity)
     emit zombieSpawnImageOpacityChanged(mZombieSpawnImageOpacity);
 }
 
+
 void Preferences::setShowZonesInWorldView(bool show)
 {
     if (mShowZonesInWorldView == show)
@@ -391,10 +493,22 @@ void Preferences::setShowZonesInWorldView(bool show)
     emit showZonesInWorldViewChanged(mShowZonesInWorldView);
 }
 
+void Preferences::setShowZonesWorldInWorldView(bool show)
+{
+    if (mShowZonesWorldInWorldView == show)
+        return;
+
+    mShowZonesWorldInWorldView = show;
+    mSettings->setValue(QLatin1String("Interface/ShowZonesWorldInWorldView"), mShowZonesWorldInWorldView);
+
+    emit showZonesWorldInWorldViewChanged(mShowZonesWorldInWorldView);
+}
+
 void Preferences::setShowMiniMap(bool show)
 {
     if (show == mShowMiniMap)
         return;
+
 
     mShowMiniMap = show;
     mSettings->setValue(QLatin1String("Interface/ShowMiniMap"), mShowMiniMap);

@@ -99,6 +99,7 @@
 #include <QScrollBar>
 #include <QUndoGroup>
 #include <QUndoStack>
+#include <qelapsedtimer.h>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -133,6 +134,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     mInstance = this;
 
+
+
+
     Preferences *prefs = Preferences::instance();
 
     setStatusBar(0);
@@ -164,6 +168,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionShowOtherWorlds->setChecked(prefs->showOtherWorlds());
     ui->actionShowZombieSpawnImage->setChecked(prefs->showZombieSpawnImage());
     ui->actionShowZonesInWorldView->setChecked(prefs->showZonesInWorldView());
+    ui->actionShowZonesWorldInWorldView->setChecked(prefs->showZonesWorldInWorldView());
     ui->actionHighlightCurrentLevel->setChecked(prefs->highlightCurrentLevel());
     ui->actionHighlightRoomUnderPointer->setChecked(prefs->highlightRoomUnderPointer());
 
@@ -283,8 +288,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionTemplates, &QAction::triggered, this, &MainWindow::templatesDialog);
 #ifdef ROAD_UI
     connect(ui->actionRemoveRoad, SIGNAL(triggered()), SLOT(removeRoad()));
-#else
-    ui->actionRemoveRoad->setVisible(false);
+
+    ui->actionRemoveRoad->setVisible(true);
 #endif
     connect(ui->actionRemoveBMP, &QAction::triggered, this, &MainWindow::removeBMP);
 
@@ -299,6 +304,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionGenerateInGameMapBuildingFeatures, &QAction::triggered, this, &MainWindow::generateInGameMapBuildingFeatures);
     connect(ui->actionGenerateInGameMapTreeFeatures, &QAction::triggered, this, &MainWindow::generateInGameMapTreeFeatures);
     connect(ui->actionGenerateInGameMapWaterFeatures, &QAction::triggered, this, &MainWindow::generateInGameMapWaterFeatures);
+    connect(ui->actionGenerate_Road_Features, &QAction::triggered, this, &MainWindow::generateRoadFeatures);
     connect(ui->actionRemoveInGameMapFeatures, &QAction::triggered, this, &MainWindow::removeInGameMapFeatures);
     connect(ui->actionRemoveInGameMapPoints, &QAction::triggered, this, &MainWindow::removeInGameMapPoint);
     connect(ui->actionSplitInGameMapPolygon, &QAction::triggered, this, &MainWindow::splitInGameMapPolygon);
@@ -319,6 +325,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionShowBMP, &QAction::toggled, prefs, &Preferences::setShowBMPs);
     connect(ui->actionShowZombieSpawnImage, &QAction::toggled, prefs, &Preferences::setShowZombieSpawnImage);
     connect(ui->actionShowZonesInWorldView, &QAction::toggled, prefs, &Preferences::setShowZonesInWorldView);
+    connect(ui->actionShowZonesWorldInWorldView, &QAction::toggled, prefs, &Preferences::setShowZonesWorldInWorldView);
     connect(ui->actionHighlightCurrentLevel, &QAction::toggled, prefs, &Preferences::setHighlightCurrentLevel);
     connect(ui->actionHighlightRoomUnderPointer, &QAction::toggled, prefs, &Preferences::setHighlightRoomUnderPointer);
     connect(ui->actionLevelAbove, &QAction::triggered, this, &MainWindow::selectLevelAbove);
@@ -344,6 +351,7 @@ MainWindow::MainWindow(QWidget *parent)
     toolManager->registerTool(WorldSelectMoveRoadTool::instance());
     toolManager->registerTool(WorldCreateRoadTool::instance());
     toolManager->registerTool(WorldEditRoadTool::instance());
+
 #endif
     toolManager->registerTool(WorldBMPTool::instance());
     toolManager->addSeparator();
@@ -370,6 +378,7 @@ MainWindow::MainWindow(QWidget *parent)
     toolManager->registerTool(CellSelectMoveRoadTool::instance());
     toolManager->registerTool(CellCreateRoadTool::instance());
     toolManager->registerTool(CellEditRoadTool::instance());
+
 #endif
     new CreateInGameMapPointTool;
     new CreateInGameMapPolygonTool;
@@ -760,12 +769,19 @@ void MainWindow::openFile()
 
     Preferences::instance()->setOpenFileDirectory(QFileInfo(fileNames[0]).absolutePath());
 
+    int chrono = 0;
+    int fileCounter = fileNames.count();
     foreach (const QString &fileName, fileNames) {
-        openFile(fileName/*, mapReader*/);
+        QElapsedTimer timer;
+        timer.start();
+        //openFile(fileName/*, mapReader*/);
+        openFile(fileName, chrono);
+        chrono = (timer.elapsed() * 1000) * fileCounter;
+        fileCounter--;
     }
 }
 
-bool MainWindow::openFile(const QString &fileName)
+bool MainWindow::openFile(const QString &fileName, int chrono)
 {
     if (fileName.isEmpty())
         return false;
@@ -778,7 +794,12 @@ bool MainWindow::openFile(const QString &fileName)
     }
 
     QFileInfo fileInfo(fileName);
-    PROGRESS progress(tr("Reading %1").arg(fileInfo.fileName()));
+    if (chrono > 0) {
+        PROGRESS progress(tr("Reading %1 (estimated time to finish: %2 secs").arg(fileInfo.fileName()).arg(chrono));
+    }
+    else {
+        PROGRESS progress(tr("Reading %1").arg(fileInfo.fileName()));
+    }
 
     WorldReader reader;
     World *world = reader.readWorld(fileName);
@@ -826,7 +847,7 @@ void MainWindow::openLastFiles()
 
         // This "recent file" could be a world or just a cell.
         // We require that the world be already open when editing a cell.
-        if (openFile(path)) {
+        if (openFile(path, 0)) {
             if (mSettings.contains(QLatin1String("cellX"))) {
                 int cellX = mSettings.value(QLatin1String("cellX")).toInt();
                 int cellY = mSettings.value(QLatin1String("cellY")).toInt();
@@ -1134,6 +1155,7 @@ void MainWindow::readOldWaterDotLua()
 
 #include "mapwriter.h"
 #include <QScopedPointer>
+#include <qdom.h>
 void MainWindow::FromToAux(bool selectedOnly)
 {
     WorldDocument *worldDoc = mCurrentDocument->asWorldDocument();
@@ -1297,8 +1319,10 @@ void MainWindow::enableDeveloperFeatures()
 
     } else {
         ui->menuTools->menuAction()->setVisible(false);
-//        ui->actionLotPackViewer->setVisible(false);
+        ui->actionLotPackViewer->setVisible(false);
     }
+    ui->menuTools->menuAction()->setVisible(true);
+    ui->actionLotPackViewer->setVisible(true);
 }
 
 WorldDocument *MainWindow::currentWorldDocument()
@@ -1429,7 +1453,7 @@ void MainWindow::updateWindowTitle()
     else {
         fileName = QDir::toNativeSeparators(fileName);
     }
-    setWindowTitle(tr("[*]%1 - WorldEd").arg(fileName));
+    setWindowTitle(tr("[*]%1 - PZWorldEd (Unofficial fork by Alree build:230306)").arg(fileName));
     setWindowFilePath(fileName);
     bool isModified = mCurrentDocument ? mCurrentDocument->isModified() : false;
     if (mCurrentDocument && mCurrentDocument->isCellDocument())
@@ -1969,6 +1993,20 @@ void MainWindow::generateInGameMapWaterFeatures()
     }
 }
 
+void MainWindow::generateRoadFeatures()
+{
+    if (auto* cellDoc = mCurrentDocument->asCellDocument()) {
+        cellDoc->worldDocument()->setSelectedCells(QList<WorldCell*>() << cellDoc->cell());
+        InGameMapFeatureGenerator generator;
+        generator.generateWorld(cellDoc->worldDocument(), InGameMapFeatureGenerator::GenerateSelected, InGameMapFeatureGenerator::FeatureRoad);
+    }
+
+    if (auto* worldDoc = mCurrentDocument->asWorldDocument()) {
+        InGameMapFeatureGenerator generator;
+        generator.generateWorld(worldDoc, InGameMapFeatureGenerator::GenerateSelected, InGameMapFeatureGenerator::FeatureRoad);
+    }
+}
+
 void MainWindow::removeInGameMapFeatures()
 {
     if (mCurrentDocument == nullptr) {
@@ -2352,16 +2390,41 @@ void MainWindow::writeInGameMapFeaturesXML()
     WorldDocument *worldDoc = currentWorldDocument();
 
     QString suggestedFileName = Preferences::instance()->worldMapXMLFile();
-    if (suggestedFileName.isEmpty() || !QFileInfo::exists(suggestedFileName)) {
+
+    bool forest = false;
+    for (int y = 0; y < worldDoc->world()->height(); y++) {
+        for (int x = 0; x < worldDoc->world()->width(); x++) {
+            WorldCell* cell = worldDoc->world()->cellAt(x, y);
+            for (auto* feature : qAsConst(cell->inGameMap().mFeatures)) {
+                for (auto& property : feature->mProperties) {
+                    if (property.mKey == QLatin1String("natural")) forest = true;
+                }
+            }
+        }
+    }
+
+
+    //if (suggestedFileName.isEmpty() || !QFileInfo::exists(suggestedFileName)) {
         if (worldDoc->fileName().isEmpty()) {
             suggestedFileName = QDir::currentPath();
-            suggestedFileName += QLatin1String("/worldmap.xml");
+            if (forest) {
+                suggestedFileName += QLatin1String("/worldmap-forest.xml");
+            }
+            else {
+                suggestedFileName += QLatin1String("/worldmap.xml");
+            }
+            
         } else {
             const QFileInfo fileInfo(worldDoc->fileName());
             suggestedFileName = fileInfo.path();
-            suggestedFileName += QLatin1String("/worldmap.xml");
+            if (forest) {
+                suggestedFileName += QLatin1String("/worldmap-forest.xml");
+            }
+            else {
+                suggestedFileName += QLatin1String("/worldmap.xml");
+            }
         }
-    }
+    //}
 
     const QString fileName = QFileDialog::getSaveFileName(this, QString(), suggestedFileName, tr("XML files (*.xml)"));
     if (fileName.isEmpty()) {
@@ -2377,11 +2440,56 @@ void MainWindow::writeInGameMapFeaturesXML()
         qWarning("Failed to write InGameMap XML.");
         return;
     }
+    else {
 
-    InGameMapWriterBinary writerBinary;
-    if (!writerBinary.writeWorld(worldDoc->world(), fileName + QStringLiteral(".bin"))) {
-        qWarning("Failed to write InGameMap Binary.");
-        return;
+        InGameMapWriterBinary writerBinary;
+        if (!writerBinary.writeWorld(worldDoc->world(), fileName + QStringLiteral(".bin"))) {
+            qWarning("Failed to write InGameMap Binary.");
+            return;
+        }
+
+
+        
+        //QFile file(QFileInfo(fileName).absoluteFilePath());
+        //if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        //{
+        //    qDebug() << "Failed to open file";
+        //    return;
+        //}
+        //QDomDocument doc;
+        //if (!doc.setContent(&file))
+        //{
+        //    qDebug() << "Failed to parse file content";
+        //    file.close();
+        //    return;
+        //}
+        //file.close();
+
+        //QDomElement world = doc.firstChildElement(QStringLiteral("world"));
+        //QDomNodeList cells = world.elementsByTagName(QStringLiteral("cell"));
+        //for (int i = 0; i < cells.count(); i++)
+        //{
+        //    QDomNode cell = cells.at(i);
+        //    QDomNodeList features = cell.toElement().elementsByTagName(QStringLiteral("feature"));
+        //    for (int j = 0; j < features.count(); j++)
+        //    {
+        //        QDomNode feature = features.at(j);
+        //        QDomNodeList points = feature.toElement().elementsByTagName(QStringLiteral("point"));
+        //        if (points.count() < 3)
+        //        {
+        //            feature.parentNode().removeChild(feature);
+        //            j--;
+        //        }
+        //    }
+        //}
+        //
+        //QFile fileNew(QFileInfo(fileName).absoluteFilePath());
+        //if (!fileNew.open(QIODevice::WriteOnly | QIODevice::Text))
+        //    return;
+
+        //QTextStream stream(&fileNew);
+        //doc.save(stream, 0);
+        //fileNew.close();
     }
 }
 
@@ -2580,6 +2688,8 @@ void MainWindow::updateActions()
     ui->actionGenerateInGameMapBuildingFeatures->setEnabled(selectedCells);
     ui->actionGenerateInGameMapTreeFeatures->setEnabled(selectedCells);
     ui->actionGenerateInGameMapWaterFeatures->setEnabled(selectedCells);
+    ui->actionGenerate_Road_Features->setEnabled(selectedCells);
+
     ui->actionRemoveInGameMapFeatures->setEnabled(((worldDoc != nullptr) && (worldDoc->selectedInGameMapFeatureCount() > 0)) ||
                                                (cellDoc != nullptr && cellDoc->selectedInGameMapFeatures().isEmpty() == false));
     ui->actionRemoveInGameMapPoints->setEnabled(canRemoveInGameMapPoint());

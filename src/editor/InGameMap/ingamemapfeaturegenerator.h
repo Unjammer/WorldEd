@@ -43,7 +43,8 @@ public:
     enum FeatureType {
         FeatureBuilding,
         FeatureTree,
-        FeatureWater
+        FeatureWater,
+        FeatureRoad
     };
 
     explicit InGameMapFeatureGenerator(QObject *parent = nullptr);
@@ -57,11 +58,29 @@ private:
     bool generateCell(WorldCell *cell);
     bool doBuildings(WorldCell *cell, MapInfo *mapInfo);
     bool processObjectGroups(WorldCell *cell, MapComposite *mapComposite);
+    bool processObjectGroupsNew(WorldCell* cell, MapComposite* mapComposite);
+
+    bool processObjectGroupNew(WorldCell* cell, Tiled::ObjectGroup* objectGroup, int levelOffset, const QPoint& offset);
     bool processObjectGroup(WorldCell *cell, Tiled::ObjectGroup *objectGroup, int levelOffset, const QPoint &offset);
+
+    
     bool processObjectGroup(WorldCell *cell, MapInfo *mapInfo, Tiled::ObjectGroup *objectGroup, int levelOffset, const QPoint &offset);
+    bool processObjectGroupNew(WorldCell* cell, MapInfo* mapInfo, Tiled::ObjectGroup* objectGroup, int levelOffset, const QPoint& offset);
+
     bool isInvalidBuildingPolygon(const QPolygon &poly);
     bool doWater(WorldCell* cell, MapInfo* mapInfo);
     bool doTrees(WorldCell* cell, MapInfo *mapInfo);
+
+    bool doRoadMain(WorldCell* cell, MapInfo* mapInfo);
+
+    bool doRoadSecondary(WorldCell* cell, MapInfo* mapInfo);
+
+    bool doRoadTertiary(WorldCell* cell, MapInfo* mapInfo);
+
+    bool doRoadTrail(WorldCell* cell, MapInfo* mapInfo);
+
+    bool doRailroad(WorldCell* cell, MapInfo* mapInfo);
+
 
 private:
     WorldDocument *mWorldDoc;

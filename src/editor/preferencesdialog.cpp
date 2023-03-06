@@ -24,19 +24,19 @@
 #include <QFileDialog>
 #include <QStringList>
 
-PreferencesDialog::PreferencesDialog(WorldDocument *worldDoc, QWidget *parent)
+PreferencesDialog::PreferencesDialog(WorldDocument* worldDoc, QWidget* parent)
     : QDialog(parent)
     , ui(new Ui::PreferencesDialog)
     , mWorldDoc(worldDoc)
 {
     ui->setupUi(this);
 
-    Preferences *prefs = Preferences::instance();
+    Preferences* prefs = Preferences::instance();
 
     mTilesDirectory = prefs->tilesDirectory();
     ui->tilesDirectory->setText(QDir::toNativeSeparators(mTilesDirectory));
     connect(ui->browseTilesDirectory, &QAbstractButton::clicked,
-            this, &PreferencesDialog::browseTilesDirectory);
+        this, &PreferencesDialog::browseTilesDirectory);
 
     QString configPath = prefs->configPath();
     ui->configDirectory->setText(QDir::toNativeSeparators(configPath));
@@ -44,13 +44,31 @@ PreferencesDialog::PreferencesDialog(WorldDocument *worldDoc, QWidget *parent)
     mGridColor = prefs->gridColor();
     ui->gridColor->setColor(mGridColor);
     connect(ui->gridColor, &Tiled::Internal::ColorButton::colorChanged,
-            this, &PreferencesDialog::gridColorChanged);
+        this, &PreferencesDialog::gridColorChanged);
 
     ui->openGL->setChecked(prefs->useOpenGL());
     ui->thumbnails->setChecked(prefs->worldThumbnails());
     ui->showAdjacent->setChecked(prefs->showAdjacentMaps());
+    ui->LoadLastActiv->setChecked(prefs->LoadLastActivProject());
+    ui->enableDarkTheme->setChecked(prefs->enableDarkTheme());
     ui->zombieSpawnImageOpacity->setValue(int(prefs->zombieSpawnImageOpacity() * 100));
+    ui->hsThresholdHP->setValue(int(prefs->hsThresholdHP()));
+    ui->lblThresholdHP->setText(QString::number(int(prefs->hsThresholdHP())));
+    ui->hsThresholdHT->setValue(int(prefs->hsThresholdHT()));
+    ui->lblThresholdHT->setText(QString::number(int(prefs->hsThresholdHT())));
+    ui->hsThresholdR->setValue(int(prefs->hsThresholdR()));
+    ui->lblThresholdR->setText(QString::number(int(prefs->hsThresholdR())));
+    ui->hsSizeHP->setValue(int(prefs->hsSizeHP()));
+    ui->lblSizeHP->setText(QString::number(int(prefs->hsSizeHP())));
+    ui->hsSizeHT->setValue(int(prefs->hsSizeHT()));
+    ui->lblSizeHT->setText(QString::number(int(prefs->hsSizeHT())));
+    ui->hsSizeR->setValue(int(prefs->hsSizeR()));
+    ui->lblSizeR->setText(QString::number(int(prefs->hsSizeR())));
+
+  
 }
+
+
 
 void PreferencesDialog::browseTilesDirectory()
 {
@@ -78,4 +96,13 @@ void PreferencesDialog::accept()
     prefs->setGridColor(mGridColor);
     prefs->setShowAdjacentMaps(ui->showAdjacent->isChecked());
     prefs->setZombieSpawnImageOpacity(ui->zombieSpawnImageOpacity->value() / 100.0);
+    prefs->setHsThresholdHP(ui->hsThresholdHP->value());
+    prefs->setHsSizeHP(ui->hsSizeHP->value());
+    prefs->setHsThresholdHT(ui->hsThresholdHT->value());
+    prefs->setHsSizeHT(ui->hsSizeHT->value());
+    prefs->setHsThresholdR(ui->hsThresholdR->value());
+    prefs->setHsSizeR(ui->hsSizeR->value());
+
+    prefs->setLoadLastActivProject(ui->LoadLastActiv->isChecked());
+    prefs->setenableDarkTheme(ui->enableDarkTheme->isChecked());
 }

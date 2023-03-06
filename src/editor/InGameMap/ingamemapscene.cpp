@@ -618,7 +618,7 @@ SINGLETON_IMPL(CreateInGameMapRectangleTool)
 
 CreateInGameMapFeatureTool::CreateInGameMapFeatureTool(Type type)
     : BaseInGameMapFeatureTool(QString(),
-                        QIcon(QLatin1String(":/images/22x22/road-tool-edit.png")),
+                        QIcon(QLatin1String(":/images/22x22/point-tool-create.png")),
                         QKeySequence())
     , mFeatureType(type)
     , mPathItem(nullptr)

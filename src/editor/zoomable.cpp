@@ -40,7 +40,9 @@ static const qreal zoomFactors[] = {
     1.5,
     2.0,
     3.0,
-    4.0
+    4.0,
+    8.0,
+    10.0
 };
 const int zoomFactorCount = sizeof(zoomFactors) / sizeof(zoomFactors[0]);
 

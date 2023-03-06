@@ -75,7 +75,7 @@ QRectF LightSwitchOverlay::boundingRect() const
 
 void LightSwitchOverlay::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-//    mCellScene->renderer()->drawFancyRectangle(painter, QRect(mX, mY, 1, 1), Qt::lightGray, mZ);
+   // mCellScene->renderer()->drawFancyRectangle(painter, QRect(mX, mY, 1, 1), Qt::lightGray, mZ);
     if (option->state & QStyle::State_MouseOver) {
         QPainterPath path;
         for (const QRect &r : mRoomRegion)
@@ -160,9 +160,11 @@ void LightSwitchOverlays::update()
     }
 
     QStringList rooms = LightbulbsMgr::instance().rooms();
-    QSet<QString> ignoreRooms(rooms.begin(), rooms.end());
+    //QSet<QString> ignoreRooms(rooms.begin(), rooms.end());
+    QSet<QString> ignoreRooms(rooms.toSet());
     QStringList buildings = LightbulbsMgr::instance().maps();
-    QSet<QString> ignoreBuildings(buildings.begin(), buildings.end());
+    //QSet<QString> ignoreBuildings(buildings.begin(), buildings.end());
+    QSet<QString> ignoreBuildings(buildings.toSet());
 
     mMapBuildings = mScene->mMapBuildings;
     foreach (MapBuildingsNS::Building *building, mMapBuildings->buildings()) {

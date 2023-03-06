@@ -150,6 +150,7 @@ bool LotFilesManager::generateWorld(WorldDocument *worldDoc, GenerateMode mode)
             if (!generateCell(cell)) {
                 failures += GenerateCellFailure(cell, mError);
 //                return false;
+                continue;
             }
         }
     } else {
@@ -159,6 +160,7 @@ bool LotFilesManager::generateWorld(WorldDocument *worldDoc, GenerateMode mode)
                 if (!generateCell(cell)) {
                     failures += GenerateCellFailure(cell, mError);
 //                    return false;
+                    continue;
                 }
             }
         }

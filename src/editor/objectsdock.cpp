@@ -438,7 +438,8 @@ ObjectsView::ObjectsView(QWidget *parent)
 #endif
 
     for (Level& level : mExpandedLevels) {
-        level.expanded = true;
+        
+        level.expanded = false;
     }
 
     connect(mModel, &QAbstractItemModel::rowsInserted,

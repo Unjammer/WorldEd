@@ -17,6 +17,7 @@
 
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+#define ROAD_UI
 
 #include <QMainWindow>
 #include <QSettings>
@@ -58,7 +59,7 @@ public:
     DocumentManager *docman() const;
 
     bool saveFile(const QString &fileName);
-    bool openFile(const QString &fileName);
+    bool openFile(const QString &fileName, int chrono);
 
     void openLastFiles();
 
@@ -139,6 +140,7 @@ public slots:
     void generateInGameMapBuildingFeatures();
     void generateInGameMapTreeFeatures();
     void generateInGameMapWaterFeatures();
+    void generateRoadFeatures();
     void removeInGameMapFeatures();
     void splitInGameMapPolygon();
     void convertInGameMapPolylineToPolygon();

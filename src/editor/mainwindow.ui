@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>PZWorldEd</string>
+   <string>PZWorldEd (Unofficial fork by Alree)</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_4">
@@ -303,6 +303,7 @@
     <addaction name="actionShowBMP"/>
     <addaction name="actionShowZombieSpawnImage"/>
     <addaction name="actionShowZonesInWorldView"/>
+    <addaction name="actionShowZonesWorldInWorldView"/>
     <addaction name="separator"/>
     <addaction name="actionHighlightCurrentLevel"/>
     <addaction name="actionHighlightRoomUnderPointer"/>
@@ -373,13 +374,23 @@
     <addaction name="actionRemoveInGameMapHole"/>
     <addaction name="actionConvertToPolygon"/>
     <addaction name="separator"/>
-    <addaction name="actionGenerateInGameMapBuildingFeatures"/>
     <addaction name="actionGenerateInGameMapTreeFeatures"/>
+    <addaction name="separator"/>
+    <addaction name="actionGenerateInGameMapBuildingFeatures"/>
     <addaction name="actionGenerateInGameMapWaterFeatures"/>
+    <addaction name="actionGenerate_Road_Features"/>
     <addaction name="separator"/>
     <addaction name="actionReadInGameMapFeaturesXML"/>
     <addaction name="actionWriteInGameMapFeaturesXML"/>
     <addaction name="actionCreateImagePyramid"/>
+   </widget>
+   <widget class="QMenu" name="menuForaging">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>Foraging</string>
+    </property>
    </widget>
    <addaction name="fileMenu"/>
    <addaction name="editMenu"/>
@@ -389,6 +400,7 @@
    <addaction name="menuInGameMap"/>
    <addaction name="menuTools"/>
    <addaction name="helpMenu"/>
+   <addaction name="menuForaging"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="windowTitle">
@@ -874,6 +886,9 @@
    <property name="text">
     <string>Generate Building Features</string>
    </property>
+   <property name="toolTip">
+    <string>Generate Building Features, only from external TBX Buildings</string>
+   </property>
   </action>
   <action name="actionGenerateInGameMapWaterFeatures">
    <property name="text">
@@ -959,6 +974,22 @@
   <action name="actionSplitObjectPolygon">
    <property name="text">
     <string>Split Object Polygon</string>
+   </property>
+  </action>
+  <action name="actionGenerate_Road_Features">
+   <property name="text">
+    <string>Generate Road Features</string>
+   </property>
+  </action>
+  <action name="actionShowZonesWorldInWorldView">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Show Zones and World in World View</string>
    </property>
   </action>
  </widget>

@@ -196,7 +196,7 @@ public:
     CreateInGameMapPointTool()
         : CreateInGameMapFeatureTool(Type::Point)
     {
-        setIcon(QIcon(QLatin1String(":/images/22x22/road-tool-edit.png")));
+        setIcon(QIcon(QLatin1String(":/images/22x22/point-tool-create.png")));
     }
 };
 

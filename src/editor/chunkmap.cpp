@@ -856,7 +856,7 @@ void IsoMetaGrid::Create(const QString &directory)
                     int e = IsoLot::readInt(in);
                     int x = IsoLot::readInt(in);
                     int y = IsoLot::readInt(in);
-                    Q_UNUSED(e) Q_UNUSED(x) Q_UNUSED(y)
+                    //Q_UNUSED(e) Q_UNUSED(x) Q_UNUSED(y)
 #if 0
                     def->objects += new MetaObject(e,
                                                    x + wX * 300 - def->x,

@@ -416,8 +416,10 @@ void BMPToTMX::reportUnknownColors()
 
     QList<QString> unknownColors = mUnknownColors.keys();
     QList<QString> unknownVegColors = mUnknownVegColors.keys();
-    QSet<QString> imagePaths = QSet<QString>(unknownColors.begin(), unknownColors.end()) +
-            QSet<QString>(unknownVegColors.begin(), unknownVegColors.end());
+    //QSet<QString> imagePaths = QSet<QString>(unknownColors.begin(), unknownColors.end()) +
+    QSet<QString> imagePaths = QSet<QString>(unknownColors.toSet()) +
+            //QSet<QString>(unknownVegColors.begin(), unknownVegColors.end());
+            QSet<QString>(unknownVegColors.toSet());
 
     foreach (QString imagePath, imagePaths) {
         QMap<QRgb,UnknownColor> &map = mUnknownColors[imagePath];

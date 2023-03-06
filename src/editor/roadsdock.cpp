@@ -50,7 +50,11 @@ public:
     };
 
     QPixmap parseTileDescription(const QString &desc)
-    {
+    {   
+        if (desc.isNull() || desc.isEmpty()) {
+            return QPixmap();
+        }
+        
         int n = desc.lastIndexOf(QLatin1Char('_'));
         if (n < 0)
             return QPixmap();
@@ -64,28 +68,58 @@ public:
 
     Tileset *getTileset(const QString &name)
     {
+
         if (mTilesets.contains(name))
             return mTilesets[name];
 
+        QString tileSetName = name;
+        
         Preferences *prefs = Preferences::instance();
-        QFileInfo info(prefs->tilesDirectory() + QLatin1Char('/') + name + QLatin1String(".png"));
+        QString Folder1x = prefs->tilesDirectory() + QLatin1Char('/') + name + QLatin1String(".png");
+        QString Folder2x = prefs->tilesDirectory() + QLatin1String("/2x/") + name + QLatin1String(".png");
+
+        QFileInfo info(Folder1x);
+        QFileInfo info2x(Folder2x);
         if (info.exists()) {
-            mTilesets[name] = loadTileset(info.absoluteFilePath());
+            mTilesets[name] = loadTileset(info.absoluteFilePath(), 1);
+            return mTilesets[name];
+        }
+        else if (info2x.exists() && !info.exists())
+        {
+            mTilesets[name] = loadTileset(info2x.absoluteFilePath(), 2);
             return mTilesets[name];
         }
         return 0;
     }
 
-    Tileset *loadTileset(const QString &path)
+    Tileset *loadTileset(const QString &path, int tileSize)
     {
         Tileset *ts = new Tileset;
         QImage image = QImage(path);
-        for (int y = 0; y < image.height(); y += 128) {
-            for (int x = 0; x < image.width(); x += 64) {
-                QImage tileImage = image.copy(x, y, 64, 128);
-                ts->mTiles += QPixmap::fromImage(tileImage);
+
+        if (image.isNull()) {
+            return nullptr;
+        }
+
+        if (tileSize == 1)
+        {
+            for (int y = 0; y < image.height(); y += 128) {
+                for (int x = 0; x < image.width(); x += 64) {
+                    QImage tileImage = image.copy(x, y, 64, 128);
+                    ts->mTiles += QPixmap::fromImage(tileImage);
+                }
             }
         }
+        else if (tileSize == 2)
+        {
+            for (int y = 0; y < image.height(); y += 256) {
+                for (int x = 0; x < image.width(); x += 128) {
+                    QImage tileImage = image.copy(x, y, 128, 256);
+                    ts->mTiles += QPixmap::fromImage(tileImage);
+                }
+            }
+        }
+        //image.detach();
         return ts;
     }
 
@@ -431,7 +465,8 @@ public:
     {
         Q_UNUSED(option)
         Q_UNUSED(index)
-        return QSize(64 + 2, 128 + 2);
+        //return QSize(64 + 2, 128 + 2);
+        return QSize(128 + 2, 256 + 2);
     }
 };
 

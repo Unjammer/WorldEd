@@ -40,6 +40,8 @@
 #include <QUndoStack>
 
 #include "clipper.hpp"
+#include <QDomDocument>
+#include <qfuture.h>
 
 using namespace Tiled;
 
@@ -57,8 +59,11 @@ InGameMapFeatureGenerator::InGameMapFeatureGenerator(QObject *parent) :
 {
 }
 
+
+
 bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMapFeatureGenerator::GenerateMode mode, FeatureType type)
 {
+    auto start = std::chrono::high_resolution_clock::now();
     mFeatureType = type;
 
     mWorldDoc = worldDoc;
@@ -71,27 +76,54 @@ bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMap
     case FeatureBuilding: typeStr = QStringLiteral("building"); break;
     case FeatureTree: typeStr = QStringLiteral("trees"); break;
     case FeatureWater: typeStr = QStringLiteral("water"); break;
+    case FeatureRoad: typeStr = QStringLiteral("Road"); break;
     }
     PROGRESS progress(QStringLiteral("Generating %1 features").arg(typeStr));
 
     mWorldDoc->undoStack()->beginMacro(QStringLiteral("Generate InGameMap %1 Features").arg(typeStr));
 
     if (mode == GenerateSelected) {
-        for (WorldCell *cell : worldDoc->selectedCells())
+
+        for (WorldCell* cell : worldDoc->selectedCells())
+        {
             if (!generateCell(cell)) {
                 mWorldDoc->undoStack()->endMacro();
                 goto errorExit;
             }
+        }
+        if (worldDoc->selectedCells().count() > 1)
+        {
+            auto stop = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+            QMessageBox msgBox;
+            msgBox.setWindowTitle(QLatin1String("Duration : ") + QString::number(duration.count()) + QLatin1String(" seconds"));
+            msgBox.setText(QLatin1String("You just generated Map features.") + QLatin1Char('\n') + QLatin1String("Please do not forget to Write it to file."));
+            msgBox.isModal();
+            msgBox.isTopLevel();
+            msgBox.exec();
+        }
     } else {
+
         for (int y = 0; y < world->height(); y++) {
             for (int x = 0; x < world->width(); x++) {
                 if (!generateCell(world->cellAt(x, y))) {
                     mWorldDoc->undoStack()->endMacro();
                     goto errorExit;
                 }
+                
             }
         }
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        QMessageBox msgBox;
+        msgBox.setWindowTitle(QLatin1String("Duration : ") + QString::number(duration.count()) + QLatin1String(" seconds"));
+        msgBox.setText(QLatin1String("You just generated Map features.") + QLatin1Char('\n') + QLatin1String("Please do not forget to Write it to file."));
+        msgBox.isModal();
+        msgBox.isTopLevel();
+        msgBox.exec();
     }
+    
+    
 
     mWorldDoc->undoStack()->endMacro();
 
@@ -103,6 +135,7 @@ bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMap
     QMessageBox::information(MainWindow::instance(),
                              tr("InGameMap Feature Generator"), tr("Finished!"));
 #endif
+
     return true;
 
 errorExit:
@@ -115,9 +148,12 @@ bool InGameMapFeatureGenerator::shouldGenerateCell(WorldCell *cell)
     switch (mFeatureType) {
     case FeatureBuilding:
         return !cell->lots().isEmpty();
+        //return true;
     case FeatureTree:
         return true;
     case FeatureWater:
+        return true;
+    case FeatureRoad:
         return true;
     default:
         return false;
@@ -134,7 +170,7 @@ bool InGameMapFeatureGenerator::generateCell(WorldCell *cell)
     }
 
     MapInfo *mapInfo = MapManager::instance()->loadMap(cell->mapFilePath(),
-                                                       mWorldDoc->fileName());
+                                                       mWorldDoc->fileName(), false, MapManager::PriorityHigh);
     if (!mapInfo) {
         mError = MapManager::instance()->errorString();
         return false;
@@ -142,16 +178,28 @@ bool InGameMapFeatureGenerator::generateCell(WorldCell *cell)
 
     MapManager::instance()->addReferenceToMap(mapInfo);
 
+    QString message = QLatin1String("");
     bool ok;
     switch (mFeatureType) {
     case FeatureBuilding:
         ok = doBuildings(cell, mapInfo);
+        message = QLatin1String("Buildings");
         break;
     case FeatureTree:
         ok = doTrees(cell, mapInfo);
+        message = QLatin1String("Trees");
         break;
     case FeatureWater:
         ok = doWater(cell, mapInfo);
+        message = QLatin1String("Water");
+        break;
+    case FeatureRoad:
+        ok = doRoadMain(cell, mapInfo);
+        ok = doRoadSecondary(cell, mapInfo);
+        ok = doRoadTertiary(cell, mapInfo);
+        ok = doRoadTrail(cell, mapInfo);
+        ok = doRailroad(cell, mapInfo);
+        message = QLatin1String("Roads");
         break;
     }
 
@@ -162,49 +210,114 @@ bool InGameMapFeatureGenerator::generateCell(WorldCell *cell)
 
 bool InGameMapFeatureGenerator::doBuildings(WorldCell *cell, MapInfo *mapInfo)
 {
-    // Remove all "building=" features
-    auto& features = cell->inGameMap().features();
-    for (int i = features.size() - 1; i >= 0; i--) {
-        auto* feature = features[i];
-        for (auto& property : feature->properties()) {
-            if (property.mKey == QStringLiteral("building")) {
-                mWorldDoc->removeInGameMapFeature(cell, feature->index());
+
+    
+        // Remove all "building=" features
+        auto& features = cell->inGameMap().features();
+        for (int i = features.size() - 1; i >= 0; i--) {
+            auto* feature = features[i];
+            for (auto& property : feature->properties()) {
+                if (property.mKey == QStringLiteral("building")) {
+                    mWorldDoc->removeInGameMapFeature(cell, feature->index());
+                }
             }
         }
-    }
 
-    DelayedMapLoader mapLoader;
-    mapLoader.addMap(mapInfo);
+        DelayedMapLoader mapLoader;
+        mapLoader.addMap(mapInfo);
+     if (cell->lots().count() > 0)
+     {
+        for (WorldCellLot* lot : cell->lots()) {
+            if (MapInfo* info = MapManager::instance()->loadMap(lot->mapName(),
+                QString(), true,
+                MapManager::PriorityMedium)) {
+                mapLoader.addMap(info);
+            }
+            else {
+                mError = MapManager::instance()->errorString();
 
-    for (WorldCellLot *lot : cell->lots()) {
-        if (MapInfo *info = MapManager::instance()->loadMap(lot->mapName(),
-                                                            QString(), true,
-                                                            MapManager::PriorityMedium)) {
-            mapLoader.addMap(info);
-        } else {
-            mError = MapManager::instance()->errorString();
-            return false;
+                return false;
+            }
         }
-    }
 
 #if 1
-    while (mapLoader.isLoading()) {
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-    }
+        while (mapLoader.isLoading()) {
+            qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+        }
 
-    // This method won't work for buildings in the TMX, it only works for separate building files.
-    for (WorldCellLot *lot : cell->lots()) {
-        MapInfo *info = MapManager::instance()->mapInfo(lot->mapName());
-        if (info != nullptr && info->map() != nullptr) {
-            for (ObjectGroup *og : info->map()->objectGroups()) {
-                if (processObjectGroup(cell, info, og, lot->level(), lot->pos()) == false) {
-                    return false;
+        // This method won't work for buildings in the TMX, it only works for separate building files.
+
+        for (WorldCellLot* lot : cell->lots()) {
+            MapInfo* info = MapManager::instance()->mapInfo(lot->mapName());
+            if (info != nullptr && info->map() != nullptr) {
+                for (ObjectGroup* og : info->map()->objectGroups()) {
+                    if (processObjectGroup(cell, info, og, lot->level(), lot->pos()) == false) {
+                        return false;
+                    }
                 }
             }
         }
     }
+    else {
+         return false;
+   /*    QString fileName = QLatin1String("F:/PZ/Maps/Muldraugh/tmx/") + cell->x() + QLatin1String("_") + cell->y() + QLatin1String(".tmx");
+        QFileInfo check_file(fileName);
+            if (check_file.exists() && check_file.isFile()) {
+                QFile file(fileName);
+                if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                    QDomDocument doc;
+                    if (!doc.setContent(&file)) {
+                        file.close();
+                        return false;
+                    }
+                    file.close();
 
-    return true;
+                    QDomNodeList objectgroupNodes = doc.elementsByTagName(QLatin1String("objectgroup"));
+                    for (int i = 0; i < objectgroupNodes.count(); i++) {
+                        QDomNode objectgroupNode = objectgroupNodes.at(i);
+                        QDomElement objectgroupElement = objectgroupNode.toElement();
+
+                        QString name = objectgroupElement.attribute(QLatin1String("name"));
+                        if (name == QLatin1String("0_RoomDefs")) {
+                            int level = 0;
+                            QDomNodeList objectNodes = objectgroupNode.childNodes();
+                            for (int j = 0; j < objectNodes.count(); j++) {
+                                QDomNode objectNode = objectNodes.at(j);
+                                QDomElement objectElement = objectNode.toElement();
+
+                                QString objectName = objectElement.attribute(QLatin1String("name"));
+                                QString objectType = objectElement.attribute(QLatin1String("type"));
+                                int objectX = objectElement.attribute(QLatin1String("x")).toInt();
+                                int objectY = objectElement.attribute(QLatin1String("y")).toInt();
+                                int objectWidth = objectElement.attribute(QLatin1String("width")).toInt();
+                                int objectHeight = objectElement.attribute(QLatin1String("height")).toInt();
+
+                                WorldCellLot* lot = new WorldCellLot(cell, objectType, objectX, objectY, level, objectWidth, objectHeight);
+                                InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+
+                                InGameMapProperty property;
+                                property.mKey = QStringLiteral("building");
+                                property.mValue = objectType;
+                                feature->properties() += property;
+
+                                feature->mGeometry.mType = QStringLiteral("Polygon");
+                                InGameMapCoordinates coords;
+                                coords += InGameMapPoint(objectX, objectY);
+                                coords += InGameMapPoint((objectX+ objectWidth), objectY);
+                                coords += InGameMapPoint((objectX+ objectWidth), (objectY+ objectHeight));
+                                coords += InGameMapPoint(objectX, (objectY+ objectHeight));
+                                
+                                feature->mGeometry.mCoordinates += coords;
+
+                                mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+                                
+                            }
+                        }
+                    }
+                }
+            }*/
+    }
+     return true;
 #else
     // The cell map must be loaded before creating the MapComposite, which will
     // possibly load embedded lots.
@@ -225,8 +338,15 @@ bool InGameMapFeatureGenerator::doBuildings(WorldCell *cell, MapInfo *mapInfo)
         Q_ASSERT(info && info->map());
         mapComposite->addMap(info, lot->pos(), lot->level());
     }
+    if (processObjectGroupsNew(cell, mapComposite) == false)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(QLatin1String("The document has been modified."));
+        msgBox.exec();
+        return false;
+    }
+    return true;
 
-    return processObjectGroups(cell, mapComposite);
 #endif
 }
 
@@ -246,6 +366,25 @@ bool InGameMapFeatureGenerator::processObjectGroups(WorldCell *cell, MapComposit
 
     return true;
 }
+
+bool InGameMapFeatureGenerator::processObjectGroupsNew(WorldCell* cell, MapComposite* mapComposite)
+{
+    foreach(Layer * layer, mapComposite->map()->layers()) {
+        if (ObjectGroup* og = layer->asObjectGroup()) {
+            if (!processObjectGroupNew(cell, og, mapComposite->levelRecursive(),
+                mapComposite->originRecursive()))
+                return false;
+        }
+    }
+
+    foreach(MapComposite * subMap, mapComposite->subMaps())
+        if (!processObjectGroupsNew(cell, subMap))
+            return false;
+
+    return true;
+}
+
+
 
 namespace {
 
@@ -447,6 +586,195 @@ public:
 };
 
 } // namespace
+
+bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, ObjectGroup* objectGroup, int levelOffset, const QPoint& offset)
+{
+    //if (objectGroup->name().contains(QLatin1String("RoomDefs")) == false) {
+    //    return true;
+    //}
+
+    int level;
+    if (!MapComposite::levelForLayer(objectGroup, &level))
+        return true;
+    level += levelOffset;
+
+    //if (level != 0)
+    //    return true;
+
+    QRect bounds;
+    QVector<QRect> rects;
+
+    foreach(const MapObject * mapObject, objectGroup->objects()) {
+        if (mapObject->width() * mapObject->height() <= 0)
+            continue;
+
+        int x = qFloor(mapObject->x());
+        int y = qFloor(mapObject->y());
+        int w = qCeil(mapObject->x() + mapObject->width()) - x;
+        int h = qCeil(mapObject->y() + mapObject->height()) - y;
+
+        if (objectGroup->map()->orientation() == Map::Isometric) {
+            x += 3 * level;
+            y += 3 * level;
+        }
+
+        // Apply the MapComposite offset in the top-level map.
+        x += offset.x();
+        y += offset.y();
+        if (objectGroup->name().contains(QLatin1String("RoomDefs"))) {
+            if (x < 0 || y < 0 || x + w > 300 || y + h > 300) {
+                x = qBound(0, x, 300);
+                y = qBound(0, y, 300);
+                mError = tr("A RoomDef in cell %1,%2 overlaps cell boundaries.\nNear x,y=%3,%4")
+                    .arg(cell->x()).arg(cell->y()).arg(x).arg(y);
+                return false;
+            }
+            if (bounds.isEmpty())
+                bounds = { x, y, w, h };
+            else
+                bounds |= { x, y, w, h };
+            rects += { x, y, w, h };
+        }
+    }
+
+    if (bounds.isEmpty())
+        return true;
+
+    OutlineGrid grid;
+    grid.setSize(bounds.width(), bounds.height());
+    for (auto& rect : rects) {
+        for (int y = 0; y < rect.height(); y++)
+            for (int x = 0; x < rect.width(); x++)
+                grid.setInner(rect.x() - bounds.x() + x, rect.y() - bounds.y() + y);
+    }
+
+    grid.trace(true, [&](QPolygon& nodes) {
+        nodes.translate(bounds.left(), bounds.top());
+
+    InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+
+    InGameMapProperty property;
+    property.mKey = QStringLiteral("building");
+    property.mValue = QStringLiteral("yes");
+    feature->properties() += property;
+
+    feature->mGeometry.mType = QStringLiteral("Polygon");
+    InGameMapCoordinates coords;
+    for (auto& point : nodes) {
+        coords += InGameMapPoint(point.x(), point.y());
+    }
+    feature->mGeometry.mCoordinates += coords;
+
+    mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+        });
+
+    return true;
+}
+
+bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, MapInfo* mapInfo, ObjectGroup* objectGroup, int levelOffset, const QPoint& offset)
+{
+    //if (objectGroup->name().contains(QLatin1String("RoomDefs")) == false) {
+    //    return true;
+    //}
+
+    int level;
+    if (!MapComposite::levelForLayer(objectGroup, &level))
+        return true;
+    level += levelOffset;
+
+    //if (level != 0)
+    //    return true;
+
+    QRect bounds;
+    QVector<QRect> rects;
+
+    foreach(const MapObject * mapObject, objectGroup->objects()) {
+#if 0
+        if (mapObject->name().isEmpty() || mapObject->type().isEmpty())
+            continue;
+#endif
+        if (mapObject->width() * mapObject->height() <= 0)
+            continue;
+
+        int x = qFloor(mapObject->x());
+        int y = qFloor(mapObject->y());
+        int w = qCeil(mapObject->x() + mapObject->width()) - x;
+        int h = qCeil(mapObject->y() + mapObject->height()) - y;
+
+        if (objectGroup->map()->orientation() == Map::Isometric) {
+            x += 3 * level;
+            y += 3 * level;
+        }
+
+        // Apply the MapComposite offset in the top-level map.
+        x += offset.x();
+        y += offset.y();
+
+        if (x < 0 || y < 0 || x + w > 300 || y + h > 300) {
+            x = qBound(0, x, 300);
+            y = qBound(0, y, 300);
+            mError = tr("A RoomDef in cell %1,%2 overlaps cell boundaries.\nNear x,y=%3,%4")
+                .arg(cell->x()).arg(cell->y()).arg(x).arg(y);
+            return false;
+        }
+        if (bounds.isEmpty())
+            bounds = { x, y, w, h };
+        else
+            bounds |= { x, y, w, h };
+        rects += { x, y, w, h };
+    }
+
+    if (bounds.isEmpty())
+        return true;
+
+    OutlineGrid grid;
+    grid.setSize(bounds.width(), bounds.height());
+    for (auto& rect : rects) {
+        for (int y = 0; y < rect.height(); y++)
+            for (int x = 0; x < rect.width(); x++)
+                grid.setInner(rect.x() - bounds.x() + x, rect.y() - bounds.y() + y);
+    }
+
+    grid.trace(true, [&](QPolygon& nodes) {
+        nodes.translate(bounds.left(), bounds.top());
+
+    if (isInvalidBuildingPolygon(nodes)) {
+        return;
+    }
+
+    InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+
+    InGameMapProperty property;
+    property.mKey = QStringLiteral("building");
+    QString LEGEND = QStringLiteral("Legend");
+    if (mapInfo->map()->properties().contains(LEGEND)) {
+        property.mValue = mapInfo->map()->property(LEGEND);
+    }
+    else {
+        property.mValue = QStringLiteral("yes");
+    }
+    feature->properties() += property;
+    for (auto it = mapInfo->map()->properties().cbegin(); it != mapInfo->map()->properties().cend(); it++) {
+        if (it.key() == LEGEND) {
+            continue;
+        }
+        property.mKey = it.key();
+        property.mValue = it.value();
+        feature->properties() += property;
+    }
+
+    feature->mGeometry.mType = QStringLiteral("Polygon");
+    InGameMapCoordinates coords;
+    for (auto& point : nodes) {
+        coords += InGameMapPoint(point.x(), point.y());
+    }
+    feature->mGeometry.mCoordinates += coords;
+
+    mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+        });
+
+    return true;
+}
 
 bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, ObjectGroup *objectGroup, int levelOffset, const QPoint &offset)
 {
@@ -806,6 +1134,9 @@ bool InGameMapFeatureGenerator::doWater(WorldCell *cell, MapInfo *mapInfo)
         if (feature->properties().containsKey(QStringLiteral("water"))) {
             mWorldDoc->removeInGameMapFeature(cell, feature->index());
         }
+        if (feature->properties().contains(QStringLiteral("natural"), QStringLiteral("forest"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
     }
 
     DelayedMapLoader mapLoader;
@@ -835,7 +1166,7 @@ bool InGameMapFeatureGenerator::doWater(WorldCell *cell, MapInfo *mapInfo)
         for (auto* cell : qAsConst(cells)) {
             if (cell->isEmpty())
                 continue;
-            if ((cell->tile->id() < 8) && (cell->tile->tileset()->name() == QStringLiteral("blends_natural_02"))) {
+            if ((cell->tile->id() == 0 || cell->tile->id() == 5 || cell->tile->id() == 6 || cell->tile->id() == 7) && (cell->tile->tileset()->name() == QStringLiteral("blends_natural_02"))) {
                 return true;
             }
         }
@@ -891,10 +1222,12 @@ bool InGameMapFeatureGenerator::doWater(WorldCell *cell, MapInfo *mapInfo)
     }
 
     for (pzPolygon *poly : allPolygons) {
+        if (poly->outer.empty()) continue;
         InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
         feature->properties().set(QStringLiteral("water"), QStringLiteral("river"));
         ClipperLib::Path simple = poly->outer;
         simplifyPolygon(simple);
+        if (simple.size() < 3) continue;
         feature->mGeometry.mType = QStringLiteral("Polygon");
         InGameMapCoordinates coords;
         for (auto& point : simple) {
@@ -906,6 +1239,7 @@ bool InGameMapFeatureGenerator::doWater(WorldCell *cell, MapInfo *mapInfo)
             for (auto& hole : poly->inner) {
                 simple = hole;
                 simplifyPolygon(simple);
+                if (simple.size() < 3) continue;
                 coords.clear();
                 for (auto& point : simple) {
                     coords += InGameMapPoint(point.X, point.Y);
@@ -922,6 +1256,8 @@ bool InGameMapFeatureGenerator::doWater(WorldCell *cell, MapInfo *mapInfo)
 }
 
 #include <array>
+#include <iostream>
+#include <preferences.h>
 
 bool InGameMapFeatureGenerator::doTrees(WorldCell *cell, MapInfo *mapInfo)
 {
@@ -958,7 +1294,7 @@ bool InGameMapFeatureGenerator::doTrees(WorldCell *cell, MapInfo *mapInfo)
         for (auto* cell : qAsConst(cells)) {
             if (cell->isEmpty())
                 continue;
-            if (cell->tile->id() >= 8 && cell->tile->id() <= 15 && cell->tile->tileset()->name() == QStringLiteral("vegetation_trees_01")) {
+            if ((cell->tile->id() >= 8 && cell->tile->id() <= 15 && cell->tile->tileset()->name().startsWith(QLatin1String("vegetation_trees"))) || (cell->tile->id() == 0 && cell->tile->tileset()->name() == QStringLiteral("jumbo_tree_01"))) {
                 return true;
             }
         }
@@ -1104,6 +1440,664 @@ bool InGameMapFeatureGenerator::doTrees(WorldCell *cell, MapInfo *mapInfo)
             mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
         }
 #endif
+    }
+
+    qDeleteAll(allPolygons);
+    return true;
+}
+
+static void simplifyPolygonRoad(ClipperLib::Path& nodes, int simple, int minPoint)
+{
+    // Simplification of the polygon using Ramer-Douglas-Peucker algorithm
+    std::vector<DPPoint> points;
+    std::int64_t SCALE = simple;
+    const size_t DI = minPoint;
+    size_t lastNecessary = -1;
+    for (size_t i = 0; i < nodes.size(); i++) {
+        const auto& node = nodes[i];
+        bool necessary = i == 0 || i == nodes.size() - 1;
+
+        // Keep points on cell borders
+        if (node.X == 0 || node.X == 300 || node.Y == 0 || node.Y == 300)
+            necessary = true;
+
+        if (i - lastNecessary >= DI)
+            necessary = true;
+
+        if (necessary)
+            lastNecessary = i;
+
+        points.push_back({ std::int64_t(node.X * SCALE), std::int64_t(node.Y * SCALE), necessary });
+    }
+
+    double simplification = 2 * SCALE;
+    //simplification = SCALE;
+    
+    douglas_peucker(points, 0, points.size(), simplification, 2, 0);
+
+    nodes.clear();
+    for (auto& point : points) {
+        if (point.necessary)
+            nodes.push_back({ int(point.x / SCALE), int(point.y / SCALE) });
+    }
+
+    for (size_t i = 0; i < nodes.size() - 1; i++) {
+        const auto& n0 = nodes[i];
+        size_t end = i;
+        for (size_t j = i + 1; j < nodes.size(); j++) {
+            const auto& n1 = nodes[j];
+            if ((n0.X != n1.X) && (n0.Y != n1.Y)) // check both conditions in one if statement
+                break;
+            end = j;
+        }
+        if (i < end)
+            nodes.erase(nodes.begin() + i + 1, nodes.begin() + end);
+    }
+}
+
+
+bool InGameMapFeatureGenerator::doRoadMain(WorldCell* cell, MapInfo* mapInfo)
+{
+    auto& features = cell->inGameMap().features();
+    for (int i = features.size() - 1; i >= 0; i--) {
+        auto* feature = features[i];
+        if (feature->properties().contains(QStringLiteral("highway"), QStringLiteral("primary"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+        if (feature->properties().contains(QStringLiteral("natural"), QStringLiteral("forest"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+    }
+    Preferences* prefs = Preferences::instance();
+    int threshold = prefs->hsThresholdHP();
+    int size = prefs->hsSizeHP();
+
+    DelayedMapLoader mapLoader;
+    mapLoader.addMap(mapInfo);
+
+    while (mapInfo->isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    MapComposite staticMapComposite(mapInfo);
+    MapComposite* mapComposite = &staticMapComposite;
+    while (mapComposite->waitingForMapsToLoad() || mapLoader.isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    const QRect bounds(QPoint(), mapInfo->map()->size());
+
+    auto* layerGroup = mapComposite->layerGroupForLevel(0);
+    layerGroup->prepareDrawing2();
+
+    ClipperLib::Clipper clipper;
+    ClipperLib::Path path;
+
+    static QVector<const Tiled::Cell*> cells(40);
+
+    auto isRoadAt = [&](int x, int y) {
+        cells.resize(0);
+        layerGroup->orderedCellsAt2({ x, y }, cells);
+        for (auto* cell : qAsConst(cells)) {
+            if (cell->isEmpty())
+                continue;
+            // blends_street_01_32
+            // blends_street_01_37
+            // blends_street_01_38
+            // blends_street_01_39
+            // blends_street_01_80
+            // blends_street_01_85
+            // blends_street_01_86
+            // blends_street_01_87
+            if ((cell->tile->id() == 32 || cell->tile->id() == 37 || cell->tile->id() == 38 || cell->tile->id() == 39 || cell->tile->id() == 80 || cell->tile->id() == 85 || cell->tile->id() == 86 || cell->tile->id() == 87) && (cell->tile->tileset()->name() == QStringLiteral("blends_street_01"))) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (int y = 0; y < bounds.height(); y++) {
+        for (int x = 0; x < bounds.width(); x++) {
+            if (isRoadAt(x, y)) {
+
+                path.clear();
+                path << ClipperLib::IntPoint(x, y);
+                path << ClipperLib::IntPoint(x + 1, y);
+                path << ClipperLib::IntPoint(x + 1, y + 1);
+                path << ClipperLib::IntPoint(x, y + 1);
+                clipper.AddPath(path, ClipperLib::ptSubject, true);
+
+            }
+        }
+    }
+
+    ClipperLib::PolyTree polyTree;
+    if (clipper.Execute(ClipperLib::ctDifference, polyTree, ClipperLib::PolyFillType::pftPositive) == false) {
+        return true;
+    }
+
+    std::map<ClipperLib::PolyNode*, pzPolygon*> polyMap;
+    std::vector<pzPolygon*> allPolygons;
+    for (ClipperLib::PolyNode* node = polyTree.GetFirst(); node != nullptr; node = node->GetNext()) {
+        if (node->IsHole()) {
+            pzPolygon* outer = polyMap[node->Parent];
+            outer->inner.push_back(node->Contour);
+        }
+        else {
+            pzPolygon* poly = new pzPolygon();
+            poly->outer = node->Contour;
+            polyMap[node] = poly;
+            allPolygons.push_back(poly);
+        }
+    }
+
+    for (pzPolygon* poly : allPolygons) {
+        InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+        feature->properties().set(QStringLiteral("highway"), QStringLiteral("primary"));
+        ClipperLib::Path simple = poly->outer;
+        simplifyPolygonRoad(simple, threshold, size);
+        if (simple.size() < 4) continue;
+        feature->mGeometry.mType = QStringLiteral("Polygon");
+        InGameMapCoordinates coords;
+        for (auto& point : simple) {
+            coords += InGameMapPoint(point.X, point.Y);
+        }
+        feature->mGeometry.mCoordinates += coords;
+
+        if (poly->inner.empty() == false) {
+            for (auto& hole : poly->inner) {
+                simple = hole;
+                simplifyPolygonRoad(simple, threshold, size);
+                if (simple.size() < 4) continue;
+                coords.clear();
+                for (auto& point : simple) {
+                    coords += InGameMapPoint(point.X, point.Y);
+                }
+                feature->mGeometry.mCoordinates += coords;
+            }
+        }
+        mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+    }
+
+    qDeleteAll(allPolygons);
+    return true;
+}
+
+bool InGameMapFeatureGenerator::doRoadSecondary(WorldCell* cell, MapInfo* mapInfo)
+{
+    auto& features = cell->inGameMap().features();
+    for (int i = features.size() - 1; i >= 0; i--) {
+        auto* feature = features[i];
+        if (feature->properties().contains(QStringLiteral("highway"), QStringLiteral("secondary"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+        if (feature->properties().contains(QStringLiteral("natural"), QStringLiteral("forest"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+    }
+
+    Preferences* prefs = Preferences::instance();
+    int threshold = prefs->hsThresholdHP();
+    int size = prefs->hsSizeHP();
+
+    DelayedMapLoader mapLoader;
+    mapLoader.addMap(mapInfo);
+
+    while (mapInfo->isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    MapComposite staticMapComposite(mapInfo);
+    MapComposite* mapComposite = &staticMapComposite;
+    while (mapComposite->waitingForMapsToLoad() || mapLoader.isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    const QRect bounds(QPoint(), mapInfo->map()->size());
+
+    auto* layerGroup = mapComposite->layerGroupForLevel(0);
+    layerGroup->prepareDrawing2();
+
+    ClipperLib::Clipper clipper;
+    ClipperLib::Path path;
+
+    static QVector<const Tiled::Cell*> cells(40);
+
+    auto isRoadAt = [&](int x, int y) {
+        cells.resize(0);
+        layerGroup->orderedCellsAt2({ x, y }, cells);
+        for (auto* cell : qAsConst(cells)) {
+            if (cell->isEmpty())
+                continue;
+            // blends_street_01_96
+            // blends_street_01_101
+            // blends_street_01_102
+            // blends_street_01_103
+            if ((cell->tile->id() == 96 || cell->tile->id() == 101 || cell->tile->id() == 102 || cell->tile->id() == 103) && (cell->tile->tileset()->name() == QStringLiteral("blends_street_01"))) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (int y = 0; y < bounds.height(); y++) {
+        for (int x = 0; x < bounds.width(); x++) {
+            if (isRoadAt(x, y)) {
+
+                path.clear();
+                path << ClipperLib::IntPoint(x, y);
+                path << ClipperLib::IntPoint(x + 1, y);
+                path << ClipperLib::IntPoint(x + 1, y + 1);
+                path << ClipperLib::IntPoint(x, y + 1);
+                clipper.AddPath(path, ClipperLib::ptSubject, true);
+
+            }
+        }
+    }
+
+    ClipperLib::PolyTree polyTree;
+    if (clipper.Execute(ClipperLib::ctDifference, polyTree, ClipperLib::PolyFillType::pftPositive) == false) {
+        return true;
+    }
+
+    std::map<ClipperLib::PolyNode*, pzPolygon*> polyMap;
+    std::vector<pzPolygon*> allPolygons;
+    for (ClipperLib::PolyNode* node = polyTree.GetFirst(); node != nullptr; node = node->GetNext()) {
+        if (node->IsHole()) {
+            pzPolygon* outer = polyMap[node->Parent];
+            outer->inner.push_back(node->Contour);
+        }
+        else {
+            pzPolygon* poly = new pzPolygon();
+            poly->outer = node->Contour;
+            polyMap[node] = poly;
+            allPolygons.push_back(poly);
+        }
+    }
+
+    for (pzPolygon* poly : allPolygons) {
+        InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+        feature->properties().set(QStringLiteral("highway"), QStringLiteral("secondary"));
+        ClipperLib::Path simple = poly->outer;
+        simplifyPolygonRoad(simple, threshold, size);
+        if (simple.size() < 4) continue;
+        feature->mGeometry.mType = QStringLiteral("Polygon");
+        InGameMapCoordinates coords;
+        for (auto& point : simple) {
+            coords += InGameMapPoint(point.X, point.Y);
+        }
+        feature->mGeometry.mCoordinates += coords;
+
+        if (poly->inner.empty() == false) {
+            for (auto& hole : poly->inner) {
+                simple = hole;
+                simplifyPolygonRoad(simple, threshold, size);
+                if (simple.size() < 4) continue;
+                coords.clear();
+                for (auto& point : simple) {
+                    coords += InGameMapPoint(point.X, point.Y);
+                }
+                feature->mGeometry.mCoordinates += coords;
+            }
+        }
+        mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+    }
+
+    qDeleteAll(allPolygons);
+    return true;
+}
+
+bool InGameMapFeatureGenerator::doRoadTertiary(WorldCell* cell, MapInfo* mapInfo)
+{
+    auto& features = cell->inGameMap().features();
+    for (int i = features.size() - 1; i >= 0; i--) {
+        auto* feature = features[i];
+        if (feature->properties().contains(QStringLiteral("highway"), QStringLiteral("tertiary"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+        if (feature->properties().contains(QStringLiteral("natural"), QStringLiteral("forest"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+    }
+
+    Preferences* prefs = Preferences::instance();
+    int threshold = prefs->hsThresholdHP();
+    int size = prefs->hsSizeHP();
+
+    DelayedMapLoader mapLoader;
+    mapLoader.addMap(mapInfo);
+
+    while (mapInfo->isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    MapComposite staticMapComposite(mapInfo);
+    MapComposite* mapComposite = &staticMapComposite;
+    while (mapComposite->waitingForMapsToLoad() || mapLoader.isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    const QRect bounds(QPoint(), mapInfo->map()->size());
+
+    auto* layerGroup = mapComposite->layerGroupForLevel(0);
+    layerGroup->prepareDrawing2();
+
+    ClipperLib::Clipper clipper;
+    ClipperLib::Path path;
+
+    static QVector<const Tiled::Cell*> cells(40);
+
+    auto isRoadAt = [&](int x, int y) {
+        cells.resize(0);
+        layerGroup->orderedCellsAt2({ x, y }, cells);
+        for (auto* cell : qAsConst(cells)) {
+            if (cell->isEmpty())
+                continue;
+            // blends_street_01_48
+            // blends_street_01_53
+            // blends_street_01_54
+            // blends_street_01_55
+            if ((cell->tile->id() == 48 || cell->tile->id() == 53 || cell->tile->id() == 54 || cell->tile->id() == 55) && (cell->tile->tileset()->name() == QStringLiteral("blends_street_01"))) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (int y = 0; y < bounds.height(); y++) {
+        for (int x = 0; x < bounds.width(); x++) {
+            if (isRoadAt(x, y)) {
+
+                path.clear();
+                path << ClipperLib::IntPoint(x, y);
+                path << ClipperLib::IntPoint(x + 1, y);
+                path << ClipperLib::IntPoint(x + 1, y + 1);
+                path << ClipperLib::IntPoint(x, y + 1);
+                clipper.AddPath(path, ClipperLib::ptSubject, true);
+
+            }
+        }
+    }
+
+    ClipperLib::PolyTree polyTree;
+    if (clipper.Execute(ClipperLib::ctDifference, polyTree, ClipperLib::PolyFillType::pftPositive) == false) {
+        return true;
+    }
+
+    std::map<ClipperLib::PolyNode*, pzPolygon*> polyMap;
+    std::vector<pzPolygon*> allPolygons;
+    for (ClipperLib::PolyNode* node = polyTree.GetFirst(); node != nullptr; node = node->GetNext()) {
+        if (node->IsHole()) {
+            pzPolygon* outer = polyMap[node->Parent];
+            outer->inner.push_back(node->Contour);
+        }
+        else {
+            pzPolygon* poly = new pzPolygon();
+            poly->outer = node->Contour;
+            polyMap[node] = poly;
+            allPolygons.push_back(poly);
+        }
+    }
+
+    for (pzPolygon* poly : allPolygons) {
+        InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+        feature->properties().set(QStringLiteral("highway"), QStringLiteral("tertiary"));
+        ClipperLib::Path simple = poly->outer;
+        simplifyPolygonRoad(simple, threshold, size);
+        if (simple.size() < 4) continue;
+        feature->mGeometry.mType = QStringLiteral("Polygon");
+        InGameMapCoordinates coords;
+        for (auto& point : simple) {
+            coords += InGameMapPoint(point.X, point.Y);
+        }
+        feature->mGeometry.mCoordinates += coords;
+
+        if (poly->inner.empty() == false) {
+            for (auto& hole : poly->inner) {
+                simple = hole;
+                simplifyPolygonRoad(simple, threshold, size);
+                if (simple.size() < 4) continue;
+                coords.clear();
+                for (auto& point : simple) {
+                    coords += InGameMapPoint(point.X, point.Y);
+                }
+                feature->mGeometry.mCoordinates += coords;
+            }
+        }
+        mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+    }
+
+    qDeleteAll(allPolygons);
+    return true;
+}
+
+bool InGameMapFeatureGenerator::doRoadTrail(WorldCell* cell, MapInfo* mapInfo)
+{   
+    auto& features = cell->inGameMap().features();
+    for (int i = features.size() - 1; i >= 0; i--) {
+        auto* feature = features[i];
+        if (feature->properties().contains(QStringLiteral("highway"), QStringLiteral("trail"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+        if (feature->properties().contains(QStringLiteral("natural"), QStringLiteral("forest"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+    }
+
+    Preferences* prefs = Preferences::instance();
+    int threshold = prefs->hsThresholdHT();
+    int size = prefs->hsSizeHT();
+
+    DelayedMapLoader mapLoader;
+    mapLoader.addMap(mapInfo);
+
+    while (mapInfo->isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    MapComposite staticMapComposite(mapInfo);
+    MapComposite* mapComposite = &staticMapComposite;
+    while (mapComposite->waitingForMapsToLoad() || mapLoader.isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    const QRect bounds(QPoint(), mapInfo->map()->size());
+
+    auto* layerGroup = mapComposite->layerGroupForLevel(0);
+    layerGroup->prepareDrawing2();
+
+    ClipperLib::Clipper clipper;
+    ClipperLib::Path path;
+
+    static QVector<const Tiled::Cell*> cells(40);
+
+    auto isRoadAt = [&](int x, int y) {
+        cells.resize(0);
+        layerGroup->orderedCellsAt2({ x, y }, cells);
+        for (auto* cell : qAsConst(cells)) {
+            if (cell->isEmpty())
+                continue;
+
+            // blends_natural_01_64
+            // blends_natural_01_69
+            // blends_natural_01_70
+            // blends_natural_01_71
+            if ((cell->tile->id() == 64 || cell->tile->id() == 69 || cell->tile->id() == 70 || cell->tile->id() == 71 || cell->tile->id() == 80 || cell->tile->id() == 85 || cell->tile->id() == 86 || cell->tile->id() == 87) && (cell->tile->tileset()->name() == QStringLiteral("blends_natural_01"))) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (int y = 0; y < bounds.height(); y++) {
+        for (int x = 0; x < bounds.width(); x++) {
+            if (isRoadAt(x, y)) {
+
+                path.clear();
+                path << ClipperLib::IntPoint(x, y);
+                path << ClipperLib::IntPoint(x + 1, y);
+                path << ClipperLib::IntPoint(x + 1, y + 1);
+                path << ClipperLib::IntPoint(x, y + 1);
+                clipper.AddPath(path, ClipperLib::ptSubject, true);
+
+            }
+        }
+    }
+
+    ClipperLib::PolyTree polyTree;
+    if (clipper.Execute(ClipperLib::ctDifference, polyTree, ClipperLib::PolyFillType::pftPositive) == false) {
+        return true;
+    }
+
+    std::map<ClipperLib::PolyNode*, pzPolygon*> polyMap;
+    std::vector<pzPolygon*> allPolygons;
+    for (ClipperLib::PolyNode* node = polyTree.GetFirst(); node != nullptr; node = node->GetNext()) {
+        if (node->IsHole()) {
+            pzPolygon* outer = polyMap[node->Parent];
+            outer->inner.push_back(node->Contour);
+        }
+        else {
+            pzPolygon* poly = new pzPolygon();
+            poly->outer = node->Contour;
+            polyMap[node] = poly;
+            allPolygons.push_back(poly);
+        }
+    }
+
+    for (pzPolygon* poly : allPolygons) {
+            if (poly->outer.size() < 3) continue;
+            InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+            feature->properties().set(QStringLiteral("highway"), QStringLiteral("trail"));
+            ClipperLib::Path simple = poly->outer;
+            
+            simplifyPolygonRoad(simple, threshold, size);
+            if (simple.size() < 4) continue;
+            feature->mGeometry.mType = QStringLiteral("Polygon");
+            InGameMapCoordinates coords;
+            for (auto& point : simple) {
+                coords += InGameMapPoint(point.X, point.Y);
+            }
+            feature->mGeometry.mCoordinates += coords;
+
+            if (poly->inner.empty() == false) {
+                for (auto& hole : poly->inner) {
+                    simple = hole;
+                    simplifyPolygonRoad(simple, threshold, size);
+                    if (simple.size() < 4) continue;
+                    coords.clear();
+                    for (auto& point : simple) {
+                        coords += InGameMapPoint(point.X, point.Y);
+                    }
+                    feature->mGeometry.mCoordinates += coords;
+                }
+            }
+          
+
+            mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+
+    }
+
+    qDeleteAll(allPolygons);
+    return true;
+}
+
+
+bool InGameMapFeatureGenerator::doRailroad(WorldCell* cell, MapInfo* mapInfo)
+{
+    auto& features = cell->inGameMap().features();
+    for (int i = features.size() - 1; i >= 0; i--) {
+        auto* feature = features[i];
+        if (feature->properties().contains(QStringLiteral("railway"), QStringLiteral("*"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+        if (feature->properties().contains(QStringLiteral("natural"), QStringLiteral("forest"))) {
+            mWorldDoc->removeInGameMapFeature(cell, feature->index());
+        }
+    }
+
+    Preferences* prefs = Preferences::instance();
+    int threshold = prefs->hsThresholdR();
+    int size = prefs->hsSizeR();
+
+    DelayedMapLoader mapLoader;
+    mapLoader.addMap(mapInfo);
+
+    while (mapInfo->isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    MapComposite staticMapComposite(mapInfo);
+    MapComposite* mapComposite = &staticMapComposite;
+    while (mapComposite->waitingForMapsToLoad() || mapLoader.isLoading())
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    const QRect bounds(QPoint(), mapInfo->map()->size());
+
+    auto* layerGroup = mapComposite->layerGroupForLevel(0);
+    layerGroup->prepareDrawing2();
+
+    ClipperLib::Clipper clipper;
+    ClipperLib::Path path;
+
+    static QVector<const Tiled::Cell*> cells(40);
+
+    auto isRoadAt = [&](int x, int y) {
+        cells.resize(0);
+        layerGroup->orderedCellsAt2({ x, y }, cells);
+        for (auto* cell : qAsConst(cells)) {
+            if (cell->isEmpty())
+                continue;
+            //industry_railroad_01_xx
+            if ((cell->tile->id() >= 0) && (cell->tile->tileset()->name() == QStringLiteral("industry_railroad_01"))) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (int y = 0; y < bounds.height(); y++) {
+        for (int x = 0; x < bounds.width(); x++) {
+            if (isRoadAt(x, y)) {
+
+                path.clear();
+                path << ClipperLib::IntPoint(x, y);
+                path << ClipperLib::IntPoint(x + 1, y);
+                path << ClipperLib::IntPoint(x + 1, y + 1);
+                path << ClipperLib::IntPoint(x, y + 1);
+                clipper.AddPath(path, ClipperLib::ptSubject, true);
+
+            }
+        }
+    }
+
+    ClipperLib::PolyTree polyTree;
+    if (clipper.Execute(ClipperLib::ctDifference, polyTree, ClipperLib::PolyFillType::pftPositive) == false) {
+        return true;
+    }
+
+    std::map<ClipperLib::PolyNode*, pzPolygon*> polyMap;
+    std::vector<pzPolygon*> allPolygons;
+    for (ClipperLib::PolyNode* node = polyTree.GetFirst(); node != nullptr; node = node->GetNext()) {
+        if (node->IsHole()) {
+            pzPolygon* outer = polyMap[node->Parent];
+            outer->inner.push_back(node->Contour);
+        }
+        else {
+            pzPolygon* poly = new pzPolygon();
+            poly->outer = node->Contour;
+            polyMap[node] = poly;
+            allPolygons.push_back(poly);
+        }
+    }
+
+
+
+    for (pzPolygon* poly : allPolygons) {
+        InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+        feature->properties().set(QStringLiteral("railway"), QStringLiteral("*"));
+        ClipperLib::Path simple = poly->outer;
+        simplifyPolygonRoad(simple, threshold, size);
+        if (simple.size() < 4) continue;
+        feature->mGeometry.mType = QStringLiteral("Polygon");
+        InGameMapCoordinates coords;
+        for (auto& point : simple) {
+            coords += InGameMapPoint(point.X, point.Y);
+        }
+        feature->mGeometry.mCoordinates += coords;
+
+        mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+
     }
 
     qDeleteAll(allPolygons);

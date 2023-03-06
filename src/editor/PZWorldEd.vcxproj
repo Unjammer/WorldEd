@@ -1,0 +1,661 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{91FC0631-8316-3C37-BAEA-4D62C20EF37E}</ProjectGuid>
+    <RootNamespace>PZWorldEd</RootNamespace>
+    <Keyword>QtVS_v304</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' or !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <OutputDirectory>..\..\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>.obj\</IntermediateDirectory>
+    <PrimaryOutput>PZWorldEd</PrimaryOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <OutputDirectory>..\..\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>.obj\</IntermediateDirectory>
+    <PrimaryOutput>PZWorldEd</PrimaryOutput>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\..\</OutDir>
+    <IntDir>.obj\</IntDir>
+    <TargetName>PZWorldEd</TargetName>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\..\</OutDir>
+    <IntDir>.obj\</IntDir>
+    <TargetName>PZWorldEd</TargetName>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <QtInstall>5.12.2_msvc2017_64</QtInstall>
+    <QtModules>core;xml;opengl;gui;widgets</QtModules>
+  </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <QtInstall>5.12.2_msvc2017_64</QtInstall>
+    <QtModules>core;xml;opengl;gui;widgets</QtModules>
+  </PropertyGroup>
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
+    <Import Project="$(QtMsBuild)\qt.props" />
+  </ImportGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>GeneratedFiles\$(ConfigurationName);GeneratedFiles;.;..\libtiled;..\qtlockedfile;..\lua\src;..\quazip-1.1\quazip;..\zlib;.moc;.uic;C:\VulkanSDK\1.0.51.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>.obj\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>.obj\</ObjectFileName>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;ZOMBOID;WORLDED;QUAZIP_STATIC;QT_NO_CAST_FROM_ASCII;QT_NO_CAST_TO_ASCII;QT_NO_DEBUG;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>tiled.lib;zlib1.lib;lua.lib;quazip.lib;\lib\zlib1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>\lib;F:\PZ\pzworlded-master\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <LinkIncremental>false</LinkIncremental>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(OutDir)\PZWorldEd.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;ZOMBOID;WORLDED;QUAZIP_STATIC;QT_NO_CAST_FROM_ASCII;QT_NO_CAST_TO_ASCII;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <QtMoc>
+      <CompilerFlavor>msvc</CompilerFlavor>
+      <Include>./.moc/moc_predefs.h</Include>
+      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
+      <DynamicSource>output</DynamicSource>
+      <QtMocDir>.moc</QtMocDir>
+      <QtMocFileName>moc_%(Filename).cpp</QtMocFileName>
+    </QtMoc>
+    <QtRcc>
+      <InitFuncName>editor</InitFuncName>
+      <Compression>default</Compression>
+      <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
+      <QtRccDir>.rcc</QtRccDir>
+      <QtRccFileName>qrc_%(Filename).cpp</QtRccFileName>
+    </QtRcc>
+    <QtUic>
+      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
+      <QtUicDir>.uic</QtUicDir>
+      <QtUicFileName>ui_%(Filename).h</QtUicFileName>
+    </QtUic>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>GeneratedFiles\$(ConfigurationName);GeneratedFiles;.;..\libtiled;..\qtlockedfile;..\lua\src;..\quazip-1.1\quazip;..\zlib;.moc;.uic;C:\VulkanSDK\1.0.51.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>.obj\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>.obj\</ObjectFileName>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;ZOMBOID;WORLDED;LUA_DEBUG;QUAZIP_STATIC;QT_NO_CAST_FROM_ASCII;QT_NO_CAST_TO_ASCII;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>tiled.lib;zlib1.lib;lua.lib;quazip.lib;\lib\zlib1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>\lib;F:\PZ\pzworlded-master\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <OutputFile>$(OutDir)\PZWorldEd.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;ZOMBOID;WORLDED;LUA_DEBUG;QUAZIP_STATIC;QT_NO_CAST_FROM_ASCII;QT_NO_CAST_TO_ASCII;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <QtMoc>
+      <CompilerFlavor>msvc</CompilerFlavor>
+      <Include>./.moc/moc_predefs.h</Include>
+      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
+      <DynamicSource>output</DynamicSource>
+      <QtMocDir>.moc</QtMocDir>
+      <QtMocFileName>moc_%(Filename).cpp</QtMocFileName>
+    </QtMoc>
+    <QtRcc>
+      <InitFuncName>editor</InitFuncName>
+      <Compression>default</Compression>
+      <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
+      <QtRccDir>.rcc</QtRccDir>
+      <QtRccFileName>qrc_%(Filename).cpp</QtRccFileName>
+    </QtRcc>
+    <QtUic>
+      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
+      <QtUicDir>.uic</QtUicDir>
+      <QtUicFileName>ui_%(Filename).h</QtUicFileName>
+    </QtUic>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="basegraphicsscene.cpp" />
+    <ClCompile Include="basegraphicsview.cpp" />
+    <ClCompile Include="bmpblender.cpp" />
+    <ClCompile Include="bmptotmx.cpp" />
+    <ClCompile Include="bmptotmxconfirmdialog.cpp" />
+    <ClCompile Include="bmptotmxdialog.cpp" />
+    <ClCompile Include="BuildingEditor\building.cpp" />
+    <ClCompile Include="BuildingEditor\buildingfloor.cpp" />
+    <ClCompile Include="BuildingEditor\buildingmap.cpp" />
+    <ClCompile Include="BuildingEditor\buildingobjects.cpp" />
+    <ClCompile Include="BuildingEditor\buildingreader.cpp" />
+    <ClCompile Include="BuildingEditor\buildingroomdef.cpp" />
+    <ClCompile Include="BuildingEditor\buildingtemplates.cpp" />
+    <ClCompile Include="BuildingEditor\buildingtiles.cpp" />
+    <ClCompile Include="BuildingEditor\buildingtmx.cpp" />
+    <ClCompile Include="BuildingEditor\buildingwriter.cpp" />
+    <ClCompile Include="celldocument.cpp" />
+    <ClCompile Include="cellscene.cpp" />
+    <ClCompile Include="cellview.cpp" />
+    <ClCompile Include="navigation\chunkdatafile.cpp" />
+    <ClCompile Include="chunkmap.cpp" />
+    <ClCompile Include="clipboard.cpp" />
+    <ClCompile Include="InGameMap\clipper.cpp" />
+    <ClCompile Include="colorbutton.cpp" />
+    <ClCompile Include="copypastedialog.cpp" />
+    <ClCompile Include="defaultsfile.cpp" />
+    <ClCompile Include="document.cpp" />
+    <ClCompile Include="documentmanager.cpp" />
+    <ClCompile Include="filesystemwatcher.cpp" />
+    <ClCompile Include="fromtodialog.cpp" />
+    <ClCompile Include="BuildingEditor\furnituregroups.cpp" />
+    <ClCompile Include="generatelotsdialog.cpp" />
+    <ClCompile Include="generatelotsfailuredialog.cpp" />
+    <ClCompile Include="gotodialog.cpp" />
+    <ClCompile Include="InGameMap\ingamemapcell.cpp" />
+    <ClCompile Include="InGameMap\ingamemapdock.cpp" />
+    <ClCompile Include="InGameMap\ingamemapfeaturegenerator.cpp" />
+    <ClCompile Include="InGameMap\ingamemapimagepyramidwindow.cpp" />
+    <ClCompile Include="InGameMap\ingamemappropertiesform.cpp" />
+    <ClCompile Include="InGameMap\ingamemappropertydialog.cpp" />
+    <ClCompile Include="InGameMap\ingamemapreader.cpp" />
+    <ClCompile Include="InGameMap\ingamemapscene.cpp" />
+    <ClCompile Include="InGameMap\ingamemapundo.cpp" />
+    <ClCompile Include="InGameMap\ingamemapwriter.cpp" />
+    <ClCompile Include="InGameMap\ingamemapwriterbinary.cpp" />
+    <ClCompile Include="navigation\isochunk.cpp" />
+    <ClCompile Include="navigation\isogridsquare.cpp" />
+    <ClCompile Include="layersdock.cpp" />
+    <ClCompile Include="layersmodel.cpp" />
+    <ClCompile Include="lootwindow.cpp" />
+    <ClCompile Include="lotfilesmanager.cpp" />
+    <ClCompile Include="lotpackwindow.cpp" />
+    <ClCompile Include="lotsdock.cpp" />
+    <ClCompile Include="luatablewriter.cpp" />
+    <ClCompile Include="luawriter.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="mapbuildings.cpp" />
+    <ClCompile Include="mapcomposite.cpp" />
+    <ClCompile Include="mapimagemanager.cpp" />
+    <ClCompile Include="mapmanager.cpp" />
+    <ClCompile Include="mapsdock.cpp" />
+    <ClCompile Include="newworlddialog.cpp" />
+    <ClCompile Include="objectgroupsdialog.cpp" />
+    <ClCompile Include="objectsdock.cpp" />
+    <ClCompile Include="objecttypesdialog.cpp" />
+    <ClCompile Include="pngbuildingdialog.cpp" />
+    <ClCompile Include="preferences.cpp" />
+    <ClCompile Include="preferencesdialog.cpp" />
+    <ClCompile Include="progress.cpp" />
+    <ClCompile Include="properties.cpp" />
+    <ClCompile Include="propertiesdock.cpp" />
+    <ClCompile Include="propertydefinitionsdialog.cpp" />
+    <ClCompile Include="propertyenumdialog.cpp" />
+    <ClCompile Include="..\qtlockedfile\qtlockedfile.cpp" />
+    <ClCompile Include="..\qtlockedfile\qtlockedfile_win.cpp" />
+    <ClCompile Include="resizeworlddialog.cpp" />
+    <ClCompile Include="road.cpp" />
+    <ClCompile Include="roadsdock.cpp" />
+    <ClCompile Include="BuildingEditor\roofhiding.cpp" />
+    <ClCompile Include="sceneoverlay.cpp" />
+    <ClCompile Include="scenetools.cpp" />
+    <ClCompile Include="searchdock.cpp" />
+    <ClCompile Include="simplefile.cpp" />
+    <ClCompile Include="spawntooldialog.cpp" />
+    <ClCompile Include="templatesdialog.cpp" />
+    <ClCompile Include="threads.cpp" />
+    <ClCompile Include="tiledeffile.cpp" />
+    <ClCompile Include="tilemetainfomgr.cpp" />
+    <ClCompile Include="tilesetmanager.cpp" />
+    <ClCompile Include="tilesetstxtfile.cpp" />
+    <ClCompile Include="tmxtobmp.cpp" />
+    <ClCompile Include="tmxtobmpdialog.cpp" />
+    <ClCompile Include="toolmanager.cpp" />
+    <ClCompile Include="undodock.cpp" />
+    <ClCompile Include="undoredo.cpp" />
+    <ClCompile Include="unknowncolorsdialog.cpp" />
+    <ClCompile Include="waterflow.cpp" />
+    <ClCompile Include="world.cpp" />
+    <ClCompile Include="worldcell.cpp" />
+    <ClCompile Include="worldcellobject.cpp" />
+    <ClCompile Include="worlddocument.cpp" />
+    <ClCompile Include="worldreader.cpp" />
+    <ClCompile Include="worldscene.cpp" />
+    <ClCompile Include="worldview.cpp" />
+    <ClCompile Include="worldwriter.cpp" />
+    <ClCompile Include="writespawnpointsdialog.cpp" />
+    <ClCompile Include="writeworldobjectsdialog.cpp" />
+    <ClCompile Include="zoomable.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="basegraphicsscene.h" />
+    <QtMoc Include="basegraphicsview.h">
+    </QtMoc>
+    <QtMoc Include="bmpblender.h">
+    </QtMoc>
+    <QtMoc Include="bmptotmx.h">
+    </QtMoc>
+    <QtMoc Include="bmptotmxconfirmdialog.h">
+    </QtMoc>
+    <QtMoc Include="bmptotmxdialog.h">
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\building.h" />
+    <QtMoc Include="BuildingEditor\buildingfloor.h">
+    </QtMoc>
+    <QtMoc Include="BuildingEditor\buildingmap.h">
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\buildingobjects.h" />
+    <ClInclude Include="BuildingEditor\buildingreader.h" />
+    <ClInclude Include="BuildingEditor\buildingroomdef.h" />
+    <QtMoc Include="BuildingEditor\buildingtemplates.h">
+    </QtMoc>
+    <QtMoc Include="BuildingEditor\buildingtiles.h">
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\buildingtmx.h" />
+    <ClInclude Include="BuildingEditor\buildingwriter.h" />
+    <QtMoc Include="celldocument.h">
+    </QtMoc>
+    <QtMoc Include="cellscene.h">
+    </QtMoc>
+    <QtMoc Include="cellview.h">
+    </QtMoc>
+    <ClInclude Include="navigation\chunkdatafile.h" />
+    <ClInclude Include="chunkmap.h" />
+    <QtMoc Include="clipboard.h">
+    </QtMoc>
+    <ClInclude Include="InGameMap\clipper.hpp" />
+    <QtMoc Include="colorbutton.h">
+    </QtMoc>
+    <QtMoc Include="copypastedialog.h">
+    </QtMoc>
+    <ClInclude Include="defaultsfile.h" />
+    <QtMoc Include="document.h">
+    </QtMoc>
+    <QtMoc Include="documentmanager.h">
+    </QtMoc>
+    <QtMoc Include="filesystemwatcher.h">
+    </QtMoc>
+    <QtMoc Include="fromtodialog.h">
+    </QtMoc>
+    <QtMoc Include="BuildingEditor\furnituregroups.h">
+    </QtMoc>
+    <QtMoc Include="generatelotsdialog.h">
+    </QtMoc>
+    <QtMoc Include="generatelotsfailuredialog.h">
+    </QtMoc>
+    <QtMoc Include="gotodialog.h">
+    </QtMoc>
+    <ClInclude Include="InGameMap\ingamemapcell.h" />
+    <QtMoc Include="InGameMap\ingamemapdock.h">
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemapfeaturegenerator.h">
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemapimagepyramidwindow.h">
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemappropertiesform.h">
+    </QtMoc>
+    <QtMoc Include="InGameMap\ingamemappropertydialog.h">
+    </QtMoc>
+    <ClInclude Include="InGameMap\ingamemapreader.h" />
+    <QtMoc Include="InGameMap\ingamemapscene.h">
+    </QtMoc>
+    <ClInclude Include="InGameMap\ingamemapundo.h" />
+    <ClInclude Include="InGameMap\ingamemapwriter.h" />
+    <ClInclude Include="InGameMap\ingamemapwriterbinary.h" />
+    <ClInclude Include="navigation\isochunk.h" />
+    <ClInclude Include="navigation\isogridsquare.h" />
+    <QtMoc Include="layersdock.h">
+    </QtMoc>
+    <QtMoc Include="layersmodel.h">
+    </QtMoc>
+    <QtMoc Include="lootwindow.h">
+    </QtMoc>
+    <QtMoc Include="lotfilesmanager.h">
+    </QtMoc>
+    <QtMoc Include="lotpackwindow.h">
+    </QtMoc>
+    <QtMoc Include="lotsdock.h">
+    </QtMoc>
+    <ClInclude Include="luatablewriter.h" />
+    <ClInclude Include="luawriter.h" />
+    <QtMoc Include="mainwindow.h">
+    </QtMoc>
+    <ClInclude Include="mapbuildings.h" />
+    <QtMoc Include="mapcomposite.h">
+    </QtMoc>
+    <QtMoc Include="mapimagemanager.h">
+    </QtMoc>
+    <QtMoc Include="mapmanager.h">
+    </QtMoc>
+    <QtMoc Include="mapsdock.h">
+    </QtMoc>
+    <QtMoc Include="newworlddialog.h">
+    </QtMoc>
+    <QtMoc Include="objectgroupsdialog.h">
+    </QtMoc>
+    <QtMoc Include="objectsdock.h">
+    </QtMoc>
+    <QtMoc Include="objecttypesdialog.h">
+    </QtMoc>
+    <QtMoc Include="pngbuildingdialog.h">
+    </QtMoc>
+    <QtMoc Include="preferences.h">
+    </QtMoc>
+    <QtMoc Include="preferencesdialog.h">
+    </QtMoc>
+    <ClInclude Include="progress.h" />
+    <QtMoc Include="propertiesdock.h">
+    </QtMoc>
+    <QtMoc Include="propertydefinitionsdialog.h">
+    </QtMoc>
+    <QtMoc Include="propertyenumdialog.h">
+    </QtMoc>
+    <ClInclude Include="..\qtlockedfile\qtlockedfile.h" />
+    <QtMoc Include="resizeworlddialog.h">
+    </QtMoc>
+    <ClInclude Include="road.h" />
+    <QtMoc Include="roadsdock.h">
+    </QtMoc>
+    <ClInclude Include="BuildingEditor\roofhiding.h" />
+    <QtMoc Include="sceneoverlay.h">
+    </QtMoc>
+    <QtMoc Include="scenetools.h">
+    </QtMoc>
+    <QtMoc Include="searchdock.h">
+    </QtMoc>
+    <ClInclude Include="simplefile.h" />
+    <QtMoc Include="spawntooldialog.h">
+    </QtMoc>
+    <QtMoc Include="templatesdialog.h">
+    </QtMoc>
+    <QtMoc Include="threads.h">
+    </QtMoc>
+    <QtMoc Include="tiledeffile.h">
+    </QtMoc>
+    <QtMoc Include="tilemetainfomgr.h">
+    </QtMoc>
+    <QtMoc Include="tilesetmanager.h">
+    </QtMoc>
+    <QtMoc Include="tilesetstxtfile.h">
+    </QtMoc>
+    <QtMoc Include="tmxtobmp.h">
+    </QtMoc>
+    <QtMoc Include="tmxtobmpdialog.h">
+    </QtMoc>
+    <QtMoc Include="toolmanager.h">
+    </QtMoc>
+    <ClInclude Include="undodock.h" />
+    <QtMoc Include="undoredo.h">
+    </QtMoc>
+    <QtMoc Include="unknowncolorsdialog.h">
+    </QtMoc>
+    <ClInclude Include="waterflow.h" />
+    <ClInclude Include="world.h" />
+    <ClInclude Include="worldcell.h" />
+    <QtMoc Include="worlddocument.h">
+    </QtMoc>
+    <ClInclude Include="worldproperties.h" />
+    <ClInclude Include="worldreader.h" />
+    <QtMoc Include="worldscene.h">
+    </QtMoc>
+    <QtMoc Include="worldview.h">
+    </QtMoc>
+    <ClInclude Include="worldwriter.h" />
+    <QtMoc Include="writespawnpointsdialog.h">
+    </QtMoc>
+    <QtMoc Include="writeworldobjectsdialog.h">
+    </QtMoc>
+    <QtMoc Include="zoomable.h">
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include=".moc\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -O2 -MD -Zi /Zi -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;.moc\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.moc\moc_predefs.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -Zi -MDd -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;.moc\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.moc\moc_predefs.h;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="bmptotmxconfirmdialog.ui">
+    </QtUic>
+    <QtUic Include="bmptotmxdialog.ui">
+    </QtUic>
+    <QtUic Include="copypastedialog.ui">
+    </QtUic>
+    <QtUic Include="fromtodialog.ui">
+    </QtUic>
+    <QtUic Include="generatelotsdialog.ui">
+    </QtUic>
+    <QtUic Include="generatelotsfailuredialog.ui">
+    </QtUic>
+    <QtUic Include="gotodialog.ui">
+    </QtUic>
+    <QtUic Include="InGameMap\ingamemapimagepyramidwindow.ui">
+    </QtUic>
+    <QtUic Include="InGameMap\ingamemappropertiesform.ui">
+    </QtUic>
+    <QtUic Include="InGameMap\ingamemappropertydialog.ui">
+    </QtUic>
+    <QtUic Include="lootwindow.ui">
+    </QtUic>
+    <QtUic Include="lotpackwindow.ui">
+    </QtUic>
+    <QtUic Include="mainwindow.ui">
+    </QtUic>
+    <QtUic Include="newworlddialog.ui">
+    </QtUic>
+    <QtUic Include="objectgroupsdialog.ui">
+    </QtUic>
+    <QtUic Include="objecttypesdialog.ui">
+    </QtUic>
+    <QtUic Include="pngbuildingdialog.ui">
+    </QtUic>
+    <QtUic Include="preferencesdialog.ui">
+    </QtUic>
+    <QtUic Include="propertiesdialog.ui">
+    </QtUic>
+    <QtUic Include="propertiesview.ui">
+    </QtUic>
+    <QtUic Include="propertyenumdialog.ui">
+    </QtUic>
+    <QtUic Include="resizeworlddialog.ui">
+    </QtUic>
+    <QtUic Include="searchdock.ui">
+    </QtUic>
+    <QtUic Include="spawntooldialog.ui">
+    </QtUic>
+    <QtUic Include="templatesdialog.ui">
+    </QtUic>
+    <QtUic Include="tmxtobmpdialog.ui">
+    </QtUic>
+    <QtUic Include="unknowncolorsdialog.ui">
+    </QtUic>
+    <QtUic Include="writespawnpointsdialog.ui">
+    </QtUic>
+    <QtUic Include="writeworldobjectsdialog.ui">
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="images\SpeakerIcon.png" />
+    <None Include="images\about-tiled-logo.png" />
+    <None Include="images\22x22\add.png" />
+    <None Include="images\16x16\application-exit.png" />
+    <None Include="images\22x22\bmp-tool-select.png" />
+    <None Include="images\24x24\dice.png" />
+    <None Include="images\16x16\document-export.png" />
+    <None Include="images\16x16\document-import.png" />
+    <None Include="images\16x16\document-new.png" />
+    <None Include="images\24x24\document-new.png" />
+    <None Include="images\16x16\document-open-recent.png" />
+    <None Include="images\24x24\document-open-recent.png" />
+    <None Include="images\16x16\document-open.png" />
+    <None Include="images\24x24\document-open.png" />
+    <None Include="images\16x16\document-page-setup.png" />
+    <None Include="images\24x24\document-page-setup.png" />
+    <None Include="images\16x16\document-properties.png" />
+    <None Include="images\24x24\document-properties.png" />
+    <None Include="images\16x16\document-save-as.png" />
+    <None Include="images\24x24\document-save-as.png" />
+    <None Include="images\16x16\document-save.png" />
+    <None Include="images\24x24\document-save.png" />
+    <None Include="images\16x16\drive-harddisk.png" />
+    <None Include="images\24x24\drive-harddisk.png" />
+    <None Include="images\16x16\edit-clear.png" />
+    <None Include="images\24x24\edit-clear.png" />
+    <None Include="images\16x16\edit-copy.png" />
+    <None Include="images\24x24\edit-copy.png" />
+    <None Include="images\16x16\edit-cut.png" />
+    <None Include="images\24x24\edit-cut.png" />
+    <None Include="images\16x16\edit-delete.png" />
+    <None Include="images\16x16\edit-paste.png" />
+    <None Include="images\24x24\edit-paste.png" />
+    <None Include="images\16x16\edit-redo.png" />
+    <None Include="images\24x24\edit-redo.png" />
+    <None Include="images\16x16\edit-rename.png" />
+    <None Include="images\16x16\edit-undo.png" />
+    <None Include="images\24x24\edit-undo.png" />
+    <QtRcc Include="editor.qrc">
+    </QtRcc>
+    <None Include="images\16x16\go-down.png" />
+    <None Include="images\24x24\go-down.png" />
+    <None Include="images\16x16\go-up.png" />
+    <None Include="images\24x24\go-up.png" />
+    <None Include="images\16x16\help-about.png" />
+    <None Include="images\24x24\help-about.png" />
+    <None Include="images\idea.png" />
+    <None Include="images\24x24\insert-image.png" />
+    <None Include="images\24x24\insert-object.png" />
+    <None Include="images\24x24\insert-polygon.png" />
+    <None Include="images\24x24\insert-polyline.png" />
+    <None Include="images\24x24\insert-rectangle.png" />
+    <None Include="images\16x16\layer-image.png" />
+    <None Include="images\16x16\layer-object.png" />
+    <None Include="images\16x16\layer-tile-stop.png" />
+    <None Include="images\16x16\layer-tile.png" />
+    <None Include="images\missing-tile.png" />
+    <None Include="images\22x22\remove.png" />
+    <None Include="images\22x22\road-tool-create.png" />
+    <None Include="images\22x22\road-tool-edit.png" />
+    <None Include="images\22x22\road-tool-select.png" />
+    <None Include="images\16x16\show_hide_others.png" />
+    <None Include="images\16x16\stock-duplicate-16.png" />
+    <None Include="images\22x22\stock-tool-bucket-fill.png" />
+    <None Include="images\22x22\stock-tool-clone.png" />
+    <None Include="images\22x22\stock-tool-eraser.png" />
+    <None Include="images\22x22\stock-tool-rect-select.png" />
+    <None Include="images\24x24\system-run.png" />
+    <None Include="images\tiled-icon-16.png" />
+    <None Include="images\tiled-icon-32.png" />
+    <None Include="images\24x24\tool-edit-polygons.png" />
+    <None Include="images\22x22\tool-select-objects.png" />
+    <None Include="images\22x22\tool-spawn-point.png" />
+    <None Include="images\16x16\window-close.png" />
+    <None Include="images\16x16\zoom-in.png" />
+    <None Include="images\24x24\zoom-in.png" />
+    <None Include="images\16x16\zoom-original.png" />
+    <None Include="images\24x24\zoom-original.png" />
+    <None Include="images\16x16\zoom-out.png" />
+    <None Include="images\24x24\zoom-out.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="worlded.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="images\22x22\point-tool-create.png" />
+    <Image Include="images\22x22\road-tool-delete.png" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

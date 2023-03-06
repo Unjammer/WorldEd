@@ -90,7 +90,8 @@ public:
     RoadTypeModel *model() const
     { return mModel; }
 
-    QSize sizeHint() { return QSize((64+2)*3, 128+2); }
+    //QSize sizeHint() { return QSize((64+2)*3, 128+2); }
+    QSize sizeHint() { return QSize((128+2)*3, 256+2); }
 
     void setDocument(Document *doc);
     void clearDocument();

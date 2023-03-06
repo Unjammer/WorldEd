@@ -27,6 +27,8 @@
 #include "progress.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
+#include <QTextStream>
+
 using namespace Tiled;
 using namespace Tiled::Internal;
 #endif
@@ -34,6 +36,8 @@ using namespace Tiled::Internal;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QImageReader>
 #endif
+
+
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +53,16 @@ int main(int argc, char *argv[])
 #else
     a.setApplicationVersion(QLatin1String("0.0.1"));
 #endif
+    if (Preferences::instance()->enableDarkTheme())
+    {
+        QString fileName = QCoreApplication::applicationDirPath() + QLatin1String("/theme/dark.qss");
+        QFile file(fileName);
+        file.open(QIODevice::ReadOnly | QIODevice::Text);
+        QTextStream in(&file);
+        QString stylesheet = in.readAll();
 
+        a.setStyleSheet(stylesheet);
+    }
 #ifdef Q_WS_MAC
     a.setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
@@ -60,6 +73,7 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     w.show();
+
 
     if (!w.InitConfigFiles())
         return 0;
@@ -74,7 +88,10 @@ int main(int argc, char *argv[])
     TilesetManager::instance()->waitForTilesets(TilesetManager::instance()->tilesets(), &w);
     progress.release();
 
-    w.openLastFiles();
+    if (Preferences::instance()->LoadLastActivProject())
+    {
+        w.openLastFiles();
+    }
 
 #if 1
     int ret = a.exec();

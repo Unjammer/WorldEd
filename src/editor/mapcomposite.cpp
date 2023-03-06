@@ -31,7 +31,7 @@
 #include <QFileInfo>
 
 #ifdef WORLDED
-#define MAX_WORLD_LEVELS 8
+#define MAX_WORLD_LEVELS 16
 #endif
 
 using namespace Tiled;

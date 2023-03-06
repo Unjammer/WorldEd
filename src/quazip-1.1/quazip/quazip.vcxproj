@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{99166B11-E329-393B-9A3B-1CE269E85362}</ProjectGuid>
+    <RootNamespace>quazip</RootNamespace>
+    <Keyword>Qt4VSv1.0</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <OutputDirectory>\lib\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <IntermediateDirectory>release\</IntermediateDirectory>
+    <PrimaryOutput>quazip</PrimaryOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <OutputDirectory>\lib\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <IntermediateDirectory>debug\</IntermediateDirectory>
+    <PrimaryOutput>quazip</PrimaryOutput>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">\lib\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">quazip</TargetName>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IgnoreImportLibrary>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">\lib\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">quazip</TargetName>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include\QtGui;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include\QtANGLE;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include\QtCore;release;C:\VulkanSDK\1.0.51.0\include;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\mkspecs\win32-msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>release\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>release\</ObjectFileName>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QUAZIP_BUILD;QUAZIP_STATIC;QT_NO_DEBUG;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <ProgramDataBaseFileName>
+      </ProgramDataBaseFileName>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)\quazip.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QUAZIP_BUILD;QUAZIP_STATIC;QT_NO_DEBUG;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include\QtGui;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include\QtANGLE;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\include\QtCore;debug;C:\VulkanSDK\1.0.51.0\include;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\mkspecs\win32-msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>debug\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>debug\</ObjectFileName>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QUAZIP_BUILD;QUAZIP_STATIC;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)\quazip.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QUAZIP_BUILD;QUAZIP_STATIC;QT_GUI_LIB;QT_CORE_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="JlCompress.cpp" />
+    <ClCompile Include="qioapi.cpp" />
+    <ClCompile Include="quaadler32.cpp" />
+    <ClCompile Include="quachecksum32.cpp" />
+    <ClCompile Include="quacrc32.cpp" />
+    <ClCompile Include="quagzipfile.cpp" />
+    <ClCompile Include="quaziodevice.cpp" />
+    <ClCompile Include="quazip.cpp" />
+    <ClCompile Include="quazipdir.cpp" />
+    <ClCompile Include="quazipfile.cpp" />
+    <ClCompile Include="quazipfileinfo.cpp" />
+    <ClCompile Include="quazipnewinfo.cpp" />
+    <ClCompile Include="unzip.c" />
+    <ClCompile Include="zip.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JlCompress.h" />
+    <ClInclude Include="ioapi.h" />
+    <ClInclude Include="minizip_crypt.h" />
+    <ClInclude Include="quaadler32.h" />
+    <ClInclude Include="quachecksum32.h" />
+    <ClInclude Include="quacrc32.h" />
+    <CustomBuild Include="quagzipfile.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">quagzipfile.h;release\moc_predefs.h;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DQUAZIP_BUILD -DQUAZIP_STATIC -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include F:/PZ/pzworlded-master/src/quazip-1.1/quazip/release/moc_predefs.h -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/mkspecs/win32-msvc -IF:/PZ/pzworlded-master/src/quazip-1.1/quazip -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtGui -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtANGLE -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtCore -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\ATLMFC\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\VS\include" -I"C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt" -I"C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um" quagzipfile.h -o release\moc_quagzipfile.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC quagzipfile.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\moc_quagzipfile.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">quagzipfile.h;debug\moc_predefs.h;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DQUAZIP_BUILD -DQUAZIP_STATIC -DQT_GUI_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include F:/PZ/pzworlded-master/src/quazip-1.1/quazip/debug/moc_predefs.h -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/mkspecs/win32-msvc -IF:/PZ/pzworlded-master/src/quazip-1.1/quazip -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtGui -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtANGLE -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtCore -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\ATLMFC\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\VS\include" -I"C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt" -I"C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um" quagzipfile.h -o debug\moc_quagzipfile.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC quagzipfile.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\moc_quagzipfile.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="quaziodevice.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">quaziodevice.h;release\moc_predefs.h;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DQUAZIP_BUILD -DQUAZIP_STATIC -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include F:/PZ/pzworlded-master/src/quazip-1.1/quazip/release/moc_predefs.h -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/mkspecs/win32-msvc -IF:/PZ/pzworlded-master/src/quazip-1.1/quazip -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtGui -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtANGLE -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtCore -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\ATLMFC\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\VS\include" -I"C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt" -I"C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um" quaziodevice.h -o release\moc_quaziodevice.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC quaziodevice.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\moc_quaziodevice.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">quaziodevice.h;debug\moc_predefs.h;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DQUAZIP_BUILD -DQUAZIP_STATIC -DQT_GUI_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include F:/PZ/pzworlded-master/src/quazip-1.1/quazip/debug/moc_predefs.h -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/mkspecs/win32-msvc -IF:/PZ/pzworlded-master/src/quazip-1.1/quazip -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtGui -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtANGLE -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtCore -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\ATLMFC\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\VS\include" -I"C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt" -I"C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um" quaziodevice.h -o debug\moc_quaziodevice.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC quaziodevice.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\moc_quaziodevice.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="quazip.h" />
+    <ClInclude Include="quazip_global.h" />
+    <ClInclude Include="quazip_qt_compat.h" />
+    <ClInclude Include="quazipdir.h" />
+    <CustomBuild Include="quazipfile.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">quazipfile.h;release\moc_predefs.h;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DQUAZIP_BUILD -DQUAZIP_STATIC -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include F:/PZ/pzworlded-master/src/quazip-1.1/quazip/release/moc_predefs.h -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/mkspecs/win32-msvc -IF:/PZ/pzworlded-master/src/quazip-1.1/quazip -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtGui -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtANGLE -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtCore -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\ATLMFC\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\VS\include" -I"C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt" -I"C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um" quazipfile.h -o release\moc_quazipfile.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC quazipfile.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\moc_quazipfile.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">quazipfile.h;debug\moc_predefs.h;F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DQUAZIP_BUILD -DQUAZIP_STATIC -DQT_GUI_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include F:/PZ/pzworlded-master/src/quazip-1.1/quazip/debug/moc_predefs.h -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/mkspecs/win32-msvc -IF:/PZ/pzworlded-master/src/quazip-1.1/quazip -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtGui -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtANGLE -IF:/QT/QT5.12.2/5.12.2/MSVC2017_64/include/QtCore -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\ATLMFC\include" -I"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\VS\include" -I"C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt" -I"C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt" -I"C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um" quazipfile.h -o debug\moc_quazipfile.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC quazipfile.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\moc_quazipfile.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="quazipfileinfo.h" />
+    <ClInclude Include="quazipnewinfo.h" />
+    <ClInclude Include="unzip.h" />
+    <ClInclude Include="zip.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="debug\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -Zi -MDd -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E F:\QT\QT5.12.2\5.12.2\MSVC2017_64\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;debug\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\moc_predefs.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="release\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\QT\QT5.12.2\5.12.2\MSVC2017_64\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -O2 -MD -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E F:\QT\QT5.12.2\5.12.2\MSVC2017_64\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;release\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\moc_predefs.h;%(Outputs)</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <ClCompile Include="debug\moc_quagzipfile.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_quagzipfile.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="debug\moc_quaziodevice.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_quaziodevice.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="debug\moc_quazipfile.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_quazipfile.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

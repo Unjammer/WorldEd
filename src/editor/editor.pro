@@ -166,7 +166,6 @@ SOURCES += main.cpp\
     defaultsfile.cpp \
     BuildingEditor/roofhiding.cpp \
     waterflow.cpp
-
 HEADERS  += mainwindow.h \
     generatelotsfailuredialog.h \
     InGameMap/clipper.hpp \
@@ -272,7 +271,6 @@ HEADERS  += mainwindow.h \
     defaultsfile.h \
     BuildingEditor/roofhiding.h \
     waterflow.h
-
 FORMS    += mainwindow.ui \
     generatelotsfailuredialog.ui \
     InGameMap/ingamemapimagepyramidwindow.ui \
@@ -302,9 +300,7 @@ FORMS    += mainwindow.ui \
     writeworldobjectsdialog.ui \
     tmxtobmpdialog.ui \
     searchdock.ui
-
-OTHER_FILES +=
-
+#OTHER_FILES +=
 RESOURCES += \
     editor.qrc
 

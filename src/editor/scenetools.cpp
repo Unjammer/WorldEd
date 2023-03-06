@@ -1099,7 +1099,8 @@ void RoomToneTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (RoomToneItem *item = topmostItemAt(event->scenePos())) {
         QList<WorldCellObject*> selectedObjects = mScene->document()->selectedObjects();
-        QSet<WorldCellObject*> selection(selectedObjects.begin(), selectedObjects.end());
+        //QSet<WorldCellObject*> selection(selectedObjects.begin(), selectedObjects.end());
+        QSet<WorldCellObject*> selection(selectedObjects.toSet());
         if (event->modifiers() & Qt::ShiftModifier) {
             selection += item->object();
         } else if (event->modifiers() & Qt::ControlModifier) {
@@ -1112,7 +1113,8 @@ void RoomToneTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             selection.clear();
             selection += item->object();
         }
-        mScene->document()->setSelectedObjects({selection.begin(), selection.end()});
+        //mScene->document()->setSelectedObjects({selection.begin(), selection.end()});
+        mScene->document()->setSelectedObjects({selection.toList()});
         event->accept();
         return;
     }
@@ -1410,7 +1412,8 @@ void SpawnPointTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (SpawnPointItem *item = topmostItemAt(event->scenePos())) {
         QList<WorldCellObject*> selectedObjects = mScene->document()->selectedObjects();
-        QSet<WorldCellObject*> selection(selectedObjects.begin(), selectedObjects.end());
+        //QSet<WorldCellObject*> selection(selectedObjects.begin(), selectedObjects.end());
+        QSet<WorldCellObject*> selection(selectedObjects.toSet());
         if (event->modifiers() & Qt::ShiftModifier)
             selection += item->object();
         else if (event->modifiers() & Qt::ControlModifier) {
@@ -1422,7 +1425,8 @@ void SpawnPointTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             selection.clear();
             selection += item->object();
         }
-        mScene->document()->setSelectedObjects({selection.begin(), selection.end()});
+        //mScene->document()->setSelectedObjects({selection.begin(), selection.end()});
+        mScene->document()->setSelectedObjects({ selection.toList() });
         event->accept();
         return;
     }
@@ -3144,7 +3148,15 @@ void WorldCellTool::showContextMenu(const QPointF &scenePos, const QPoint &scree
         QDesktopServices::openUrl(url);
     }
     if (action == thumbnailAction) {
-        MapImageManager::instance()->recreateMapImage(item->mapFilePath());
+        //MapImageManager::instance()->recreateMapImage(item->mapFilePath());
+
+        mMovingCells = mScene->worldDocument()->selectedCells();
+
+        foreach(WorldCell *cell, mMovingCells) {
+
+            MapImageManager::instance()->recreateMapImage(cell->mapFilePath());
+        }
+
     }
 }
 
@@ -3609,6 +3621,7 @@ void RoadPointHandle::paint(QPainter *painter,
 #endif
 
 /////
+
 
 WorldEditRoadTool *WorldEditRoadTool::mInstance = 0;
 

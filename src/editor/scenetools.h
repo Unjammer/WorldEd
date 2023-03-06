@@ -713,7 +713,7 @@ public:
     CreatePointObjectTool()
         : AbstractCreatePolygonObjectTool(ObjectGeometryType::Point)
     {
-        setIcon(QIcon(QStringLiteral(":/images/22x22/road-tool-edit.png")));
+        setIcon(QIcon(QStringLiteral(":/images/22x22/point-tool-create.png")));
     }
 };
 

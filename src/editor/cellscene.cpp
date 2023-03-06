@@ -1423,8 +1423,15 @@ void ObjectLabelItem::synch()
         setText(text);
         setPos(mItem->boundingRect().center());
 
-        mBgColor = mItem->isMouseOverHighlighted() ? Qt::white : Qt::lightGray;
-        mBgColor.setAlphaF(0.75);
+        if (Preferences::instance()->enableDarkTheme())
+        {
+            mBgColor = mItem->isMouseOverHighlighted() ? QColor("#DDDDDD") : QColor("#1F1F1F");
+            mBgColor.setAlphaF(0.75);
+        }
+        else {
+            mBgColor = mItem->isMouseOverHighlighted() ? Qt::white : Qt::lightGray;
+            mBgColor.setAlphaF(0.75);
+        }
 
         update();
     }
@@ -3905,13 +3912,16 @@ void CellRoadItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
-    QColor c = Qt::blue;
+    QColor c = Qt::gray;
     if (mSelected)
         c = Qt::green;
     if (mEditable)
         c = Qt::yellow;
-    painter->setPen(c);
+
+     painter->setPen(Qt::darkRed);
+    
     painter->drawPath(shape());
+    painter->fillPath(shape(), c);
 }
 
 void CellRoadItem::synchWithRoad()
@@ -3980,6 +3990,7 @@ void DnDItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget
     QRect tileBounds(mPositionInMap.x() - mHotSpot.x(), mPositionInMap.y() - mHotSpot.y(),
                      mMapImage->mapInfo()->width(), mMapImage->mapInfo()->height());
     mRenderer->drawFancyRectangle(painter, tileBounds, Qt::darkGray, mLevel);
+
 
 #ifdef _DEBUG
     painter->drawRect(mBoundingRect);

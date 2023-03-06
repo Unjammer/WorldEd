@@ -136,7 +136,7 @@ public:
     static const int ChunksPerWidth = 10; // Number of tiles per chunk.
     static const int ChunkGridWidth = 30; // Columns/Rows of chunks displayed.
     static const int CellSize = ChunksPerWidth * ChunkGridWidth; // Columns/Rows of tiles displayed.
-    static const int MaxLevels = 16;
+    static const int MaxLevels = 15;
 
     IsoCell *cell;
 

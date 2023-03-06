@@ -236,12 +236,15 @@ bool TilesetManager::getTilesetFileName(const QString &tilesetName, QString &pat
     QString tiles1xDir = Preferences::instance()->tilesDirectory();
     QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
 
+
     QDir dir1x(tiles1xDir);
     QDir dir2x(tiles2xDir);
+
 
     QString fileName = tilesetName + QLatin1String(".png");
     path1x = dir1x.filePath(fileName);
     path2x = dir2x.filePath(fileName);
+
 
     if (QImageReader(path2x).size().isValid()) {
         return true;

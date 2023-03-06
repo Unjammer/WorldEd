@@ -78,5 +78,7 @@
         <file>images/idea.png</file>
         <file>images/24x24/insert-rectangle.png</file>
         <file>images/SpeakerIcon.png</file>
+        <file>images/22x22/point-tool-create.png</file>
+        <file>images/22x22/road-tool-delete.png</file>
     </qresource>
 </RCC>

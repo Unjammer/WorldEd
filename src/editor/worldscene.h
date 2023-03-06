@@ -511,6 +511,7 @@ public slots:
     void setShowZombieSpawnImage(bool show);
     void zombieSpawnImageOpacityChanged(qreal opacity);
     void setShowZonesInWorldView(bool show);
+    void setShowZonesWorldInWorldView(bool show);
 
     void selectedRoadsChanged();
     void roadAdded(int index);
@@ -561,8 +562,15 @@ private:
     QSet<WorldBMPItem*> mSelectedBMPItems;
     WorldBMPItem *mDragBMPItem;
     ZombieSpawnImageItem *mZombieSpawnImageItem;
+    int mhsThresholdHP;
+    int mhsSizeHP;
+    int mhsThresholdHT;
+    int mhsSizeHT;
+    int mhsThresholdR;
+    int mhsSizeR;
     bool mBMPToolActive;
     bool mDoubleClick;
+    
 
     QList<OtherWorld*> mOtherWorlds;
 };

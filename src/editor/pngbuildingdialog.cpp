@@ -188,7 +188,7 @@ bool PNGBuildingDialog::generateCell(WorldCell *cell)
     CompositeLayerGroup *layerGroup = mapComposite->layerGroupForLevel(0);
     QList<Tileset*> tilesets;
     foreach (Tileset *ts, mapInfo->map()->tilesets())
-        if (ts->name().startsWith(QLatin1String("vegetation_trees_")))
+        if (ts->name().startsWith(QLatin1String("vegetation_trees_")) || ts->name().startsWith(QLatin1String("jumbo_")))
             tilesets += ts;
     if (layerGroup && !tilesets.isEmpty()) {
         QVector<const Cell*> cells(40);

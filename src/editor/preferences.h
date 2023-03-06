@@ -80,7 +80,15 @@ public:
     bool showBMPs() const { return mShowBMPs; }
     bool showZombieSpawnImage() const { return mShowZombieSpawnImage; }
     qreal zombieSpawnImageOpacity() const { return mZombieSpawnImageOpacity; }
+    int hsThresholdHP() const { return mhsThresholdHP; }
+    int hsSizeHP() const { return mhsSizeHP; }
+    int hsThresholdHT() const { return mhsThresholdHT; }
+    int hsSizeHT() const { return mhsSizeHT; }
+    int hsThresholdR() const { return mhsThresholdR; }
+    int hsSizeR() const { return mhsSizeR; }
+
     bool showZonesInWorldView() const { return mShowZonesInWorldView; }
+    bool showZonesWorldInWorldView() const { return mShowZonesWorldInWorldView; }
 
     QString openFileDirectory() const;
     void setOpenFileDirectory(const QString &path);
@@ -90,6 +98,17 @@ public:
 
     bool showAdjacentMaps() const { return mShowAdjacentMaps; }
     void setShowAdjacentMaps(bool show);
+
+    bool LoadLastActivProject() const { return mLoadLastActivProject; }
+    bool enableDarkTheme() const { return menableDarkTheme; }
+    void setLoadLastActivProject(bool show);
+    void setenableDarkTheme(bool show);
+    void setHsThresholdHP(int threshold);
+    void setHsSizeHP(int size);
+    void setHsThresholdHT(int threshold);
+    void setHsSizeHT(int size);
+    void setHsThresholdR(int threshold);
+    void setHsSizeR(int size);
 
 signals:
     void snapToGridChanged(bool snapToGrid);
@@ -108,7 +127,9 @@ signals:
     void zombieSpawnImageOpacityChanged(qreal opacity);
     void showZonesInWorldViewChanged(bool show);
 
-#define MINIMAP_WIDTH_MIN 128
+    void showZonesWorldInWorldViewChanged(bool show);
+
+#define MINIMAP_WIDTH_MIN 256
 #define MINIMAP_WIDTH_MAX 512
     void showMiniMapChanged(bool show);
     void miniMapWidthChanged(int width);
@@ -117,6 +138,18 @@ signals:
     void mapsDirectoryChanged();
     void tilesDirectoryChanged();
     void showAdjacentMapsChanged(bool show);
+    void LoadLastActivProject(bool show);
+    void enableDarkTheme(bool show);
+    
+    void HsThresholdHP(int threshold);
+    void HsSizeHP(int size);
+
+    void HsThresholdHT(int threshold);
+    void HsSizeHT(int size);
+
+    void HsThresholdR(int threshold);
+    void HsSizeR(int size);
+    
     void highlightRoomUnderPointerChanged(bool highlight);
     void showOtherWorldsChanged(bool show);
 
@@ -133,13 +166,16 @@ public slots:
     void setShowBMPs(bool show);
     void setShowZombieSpawnImage(bool show);
     void setZombieSpawnImageOpacity(qreal opacity);
+
     void setShowZonesInWorldView(bool show);
+    void setShowZonesWorldInWorldView(bool show);
     void setHighlightCurrentLevel(bool highlight);
     void setHighlightRoomUnderPointer(bool highlight);
     void setShowOtherWorlds(bool show);
 
 private:
     Preferences();
+
     ~Preferences();
 
     QSettings *mSettings;
@@ -157,7 +193,9 @@ private:
     bool mShowMiniMap;
     bool mShowZombieSpawnImage;
     qreal mZombieSpawnImageOpacity;
+    
     bool mShowZonesInWorldView;
+    bool mShowZonesWorldInWorldView;
     int mMiniMapWidth;
     bool mHighlightCurrentLevel;
     QString mConfigDirectory;
@@ -166,6 +204,15 @@ private:
     QString mOpenFileDirectory;
     QString mWorldMapXMLFile;
     bool mShowAdjacentMaps;
+    bool mLoadLastActivProject;
+    bool menableDarkTheme;
+    int mhsThresholdHP;
+    int mhsSizeHP;
+    int mhsThresholdHT;
+    int mhsSizeHT;
+    int mhsThresholdR;
+    int mhsSizeR;
+
     bool mHighlightRoomUnderPointer;
     bool mShowOtherWorlds;
     QString mThumbnailsDirectory;

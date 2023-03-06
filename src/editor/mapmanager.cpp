@@ -84,7 +84,7 @@ MapManager::MapManager() :
     connect(mFileSystemWatcher, &FileSystemWatcher::fileChanged,
             this, &MapManager::fileChanged);
 
-    mChangedFilesTimer.setInterval(500);
+    mChangedFilesTimer.setInterval(200);
     mChangedFilesTimer.setSingleShot(true);
     connect(&mChangedFilesTimer, &QTimer::timeout,
             this, &MapManager::fileChangedTimeout);
@@ -92,7 +92,7 @@ MapManager::MapManager() :
     qRegisterMetaType<MapInfo*>("BuildingEditor::Building*");
     qRegisterMetaType<MapInfo*>("MapInfo*");
 
-    mMapReaderThread.resize(4);
+    mMapReaderThread.resize(16);
     mMapReaderWorker.resize(mMapReaderThread.size());
     for (int i = 0; i < mMapReaderThread.size(); i++) {
         mMapReaderThread[i] = new InterruptibleThread;
@@ -178,7 +178,8 @@ protected:
 #endif
 MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo,
                              bool asynch, LoadPriority priority)
-{
+{   
+
     // Do not emit mapLoaded() as a result of worker threads finishing
     // loading any maps while we are loading this one.
     // Any time QCoreApplication::processEvents() gets called,
@@ -201,11 +202,14 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo,
     if (!mapInfo)
         return nullptr;
     if (mapInfo->mLoading) {
-        foreach (MapReaderWorker *w, mMapReaderWorker)
+        foreach(MapReaderWorker * w, mMapReaderWorker)
+        {
+
             QMetaObject::invokeMethod(w, "possiblyRaisePriority",
-                                      Qt::QueuedConnection, Q_ARG(MapInfo*,mapInfo),
-                                      Q_ARG(int,priority));
-        if (!asynch) {
+                Qt::QueuedConnection, Q_ARG(MapInfo*, mapInfo),
+                Q_ARG(int, priority));
+        }
+            if (!asynch) {
             noise() << "WAITING FOR MAP" << mapName << "with priority" << priority;
             Q_ASSERT(mWaitingForMapInfo == nullptr);
             mWaitingForMapInfo = mapInfo;
@@ -243,11 +247,15 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo,
     mWaitingForMapInfo = mapInfo;
 
     PROGRESS progress(tr("Reading %1").arg(fileInfoMap.completeBaseName()));
-    foreach (MapReaderWorker *w, mMapReaderWorker)
+    foreach(MapReaderWorker * w, mMapReaderWorker)
+    {
         QMetaObject::invokeMethod(w, "possiblyRaisePriority",
-                                  Qt::QueuedConnection, Q_ARG(MapInfo*,mapInfo),
-                                  Q_ARG(int,priority));
+            Qt::QueuedConnection, Q_ARG(MapInfo*, mapInfo),
+            Q_ARG(int, priority));
+    }
+    
     noise() << "WAITING FOR MAP" << mapName << "with priority" << priority;
+    
     for (int i = 0; i < mDeferredMaps.size(); i++) {
         MapDeferral md = mDeferredMaps[i];
         if (md.mapInfo == mapInfo) {
@@ -815,7 +823,8 @@ void MapManager::buildingLoadedByThread(Building *building, MapInfo *mapInfo)
     QSet<Tileset*> usedTilesets = map->usedTilesets();
     usedTilesets.remove(TilesetManager::instance()->missingTileset());
 
-    TileMetaInfoMgr::instance()->loadTilesets({ usedTilesets.begin(), usedTilesets.end() });
+    //TileMetaInfoMgr::instance()->loadTilesets({ usedTilesets.begin(), usedTilesets.end() });
+    TileMetaInfoMgr::instance()->loadTilesets({ usedTilesets.toList() });
 
     // The map references TileMetaInfoMgr's tilesets, but we add a reference
     // to them ourself below.

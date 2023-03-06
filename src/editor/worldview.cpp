@@ -32,7 +32,7 @@ WorldView::WorldView(QWidget *parent)
     : BaseGraphicsView(NeverGL, parent)
 {
     QVector<qreal> zoomFactors = zoomable()->zoomFactors();
-    zoomable()->setZoomFactors(zoomFactors << 6.0 << 8.0);
+    zoomable()->setZoomFactors(zoomFactors << 6.0 << 20.0);
 }
 
 void WorldView::setScene(WorldScene *scene)
