@@ -219,6 +219,8 @@
     <ClCompile Include="celldocument.cpp" />
     <ClCompile Include="cellscene.cpp" />
     <ClCompile Include="cellview.cpp" />
+    <ClCompile Include="loadthumbnailsdialog.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="navigation\chunkdatafile.cpp" />
     <ClCompile Include="chunkmap.cpp" />
     <ClCompile Include="clipboard.cpp" />
@@ -280,6 +282,7 @@
     <ClCompile Include="road.cpp" />
     <ClCompile Include="roadsdock.cpp" />
     <ClCompile Include="BuildingEditor\roofhiding.cpp" />
+    <ClCompile Include="savescreenshot.cpp" />
     <ClCompile Include="sceneoverlay.cpp" />
     <ClCompile Include="scenetools.cpp" />
     <ClCompile Include="searchdock.cpp" />
@@ -342,6 +345,8 @@
     </QtMoc>
     <QtMoc Include="cellview.h">
     </QtMoc>
+    <QtMoc Include="loadthumbnailsdialog.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="navigation\chunkdatafile.h" />
     <ClInclude Include="chunkmap.h" />
     <QtMoc Include="clipboard.h">
@@ -446,6 +451,7 @@
     </QtMoc>
     <QtMoc Include="searchdock.h">
     </QtMoc>
+    <QtMoc Include="savescreenshot.h" />
     <ClInclude Include="simplefile.h" />
     <QtMoc Include="spawntooldialog.h">
     </QtMoc>
@@ -525,6 +531,7 @@
     </QtUic>
     <QtUic Include="InGameMap\ingamemappropertydialog.ui">
     </QtUic>
+    <QtUic Include="loadthumbnailsdialog.ui" />
     <QtUic Include="lootwindow.ui">
     </QtUic>
     <QtUic Include="lotpackwindow.ui">

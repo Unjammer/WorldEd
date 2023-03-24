@@ -374,6 +374,15 @@
     <ClCompile Include="zoomable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="loadthumbnailsdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="savescreenshot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basegraphicsscene.h">
@@ -694,6 +703,9 @@
     <QtMoc Include="zoomable.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <ClInclude Include="Logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include=".moc\moc_predefs.h.cbt">
@@ -786,6 +798,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="writeworldobjectsdialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="loadthumbnailsdialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -1038,5 +1053,13 @@
     <Image Include="images\22x22\road-tool-delete.png">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="loadthumbnailsdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="savescreenshot.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

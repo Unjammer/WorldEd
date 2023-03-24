@@ -147,8 +147,8 @@ bool InGameMapFeatureGenerator::shouldGenerateCell(WorldCell *cell)
 {
     switch (mFeatureType) {
     case FeatureBuilding:
-        return !cell->lots().isEmpty();
-        //return true;
+        //return !cell->lots().isEmpty();
+        return true;
     case FeatureTree:
         return true;
     case FeatureWater:
@@ -162,17 +162,22 @@ bool InGameMapFeatureGenerator::shouldGenerateCell(WorldCell *cell)
 
 bool InGameMapFeatureGenerator::generateCell(WorldCell *cell)
 {
-    if (!shouldGenerateCell(cell))
-        return true;
 
-    if (cell->mapFilePath().isEmpty()) {
+    if (!shouldGenerateCell(cell))
+    {
+
         return true;
     }
 
-    MapInfo *mapInfo = MapManager::instance()->loadMap(cell->mapFilePath(),
-                                                       mWorldDoc->fileName(), false, MapManager::PriorityHigh);
+    if (cell->mapFilePath().isEmpty()) {
+
+        return true;
+    }
+
+    MapInfo *mapInfo = MapManager::instance()->loadMap(cell->mapFilePath(), mWorldDoc->fileName(), false, MapManager::PriorityHigh);
     if (!mapInfo) {
         mError = MapManager::instance()->errorString();
+        qDebug() << mError;
         return false;
     }
 
@@ -227,6 +232,7 @@ bool InGameMapFeatureGenerator::doBuildings(WorldCell *cell, MapInfo *mapInfo)
         mapLoader.addMap(mapInfo);
      if (cell->lots().count() > 0)
      {
+         qDebug() << "cell->lots().count() " + cell->lots().count();
         for (WorldCellLot* lot : cell->lots()) {
             if (MapInfo* info = MapManager::instance()->loadMap(lot->mapName(),
                 QString(), true,
@@ -258,95 +264,36 @@ bool InGameMapFeatureGenerator::doBuildings(WorldCell *cell, MapInfo *mapInfo)
             }
         }
     }
-    else {
-         return false;
-   /*    QString fileName = QLatin1String("F:/PZ/Maps/Muldraugh/tmx/") + cell->x() + QLatin1String("_") + cell->y() + QLatin1String(".tmx");
-        QFileInfo check_file(fileName);
-            if (check_file.exists() && check_file.isFile()) {
-                QFile file(fileName);
-                if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                    QDomDocument doc;
-                    if (!doc.setContent(&file)) {
-                        file.close();
-                        return false;
-                    }
-                    file.close();
+     else {
 
-                    QDomNodeList objectgroupNodes = doc.elementsByTagName(QLatin1String("objectgroup"));
-                    for (int i = 0; i < objectgroupNodes.count(); i++) {
-                        QDomNode objectgroupNode = objectgroupNodes.at(i);
-                        QDomElement objectgroupElement = objectgroupNode.toElement();
+         while (mapInfo->isLoading())
+             qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
-                        QString name = objectgroupElement.attribute(QLatin1String("name"));
-                        if (name == QLatin1String("0_RoomDefs")) {
-                            int level = 0;
-                            QDomNodeList objectNodes = objectgroupNode.childNodes();
-                            for (int j = 0; j < objectNodes.count(); j++) {
-                                QDomNode objectNode = objectNodes.at(j);
-                                QDomElement objectElement = objectNode.toElement();
+         MapComposite staticMapComposite(mapInfo);
+         MapComposite* mapComposite = &staticMapComposite;
+         while (mapComposite->waitingForMapsToLoad() || mapLoader.isLoading())
+             qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+         if (!mapLoader.errorString().isEmpty()) {
+             mError = mapLoader.errorString();
+             qDebug() << mError;
+             return false;
+         }
 
-                                QString objectName = objectElement.attribute(QLatin1String("name"));
-                                QString objectType = objectElement.attribute(QLatin1String("type"));
-                                int objectX = objectElement.attribute(QLatin1String("x")).toInt();
-                                int objectY = objectElement.attribute(QLatin1String("y")).toInt();
-                                int objectWidth = objectElement.attribute(QLatin1String("width")).toInt();
-                                int objectHeight = objectElement.attribute(QLatin1String("height")).toInt();
-
-                                WorldCellLot* lot = new WorldCellLot(cell, objectType, objectX, objectY, level, objectWidth, objectHeight);
-                                InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
-
-                                InGameMapProperty property;
-                                property.mKey = QStringLiteral("building");
-                                property.mValue = objectType;
-                                feature->properties() += property;
-
-                                feature->mGeometry.mType = QStringLiteral("Polygon");
-                                InGameMapCoordinates coords;
-                                coords += InGameMapPoint(objectX, objectY);
-                                coords += InGameMapPoint((objectX+ objectWidth), objectY);
-                                coords += InGameMapPoint((objectX+ objectWidth), (objectY+ objectHeight));
-                                coords += InGameMapPoint(objectX, (objectY+ objectHeight));
-                                
-                                feature->mGeometry.mCoordinates += coords;
-
-                                mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
-                                
-                            }
-                        }
-                    }
-                }
-            }*/
-    }
-     return true;
-#else
-    // The cell map must be loaded before creating the MapComposite, which will
-    // possibly load embedded lots.
-    while (mapInfo->isLoading())
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-
-    MapComposite staticMapComposite(mapInfo);
-    MapComposite *mapComposite = &staticMapComposite;
-    while (mapComposite->waitingForMapsToLoad() || mapLoader.isLoading())
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-    if (!mapLoader.errorString().isEmpty()) {
-        mError = mapLoader.errorString();
-        return false;
-    }
-
-    foreach (WorldCellLot *lot, cell->lots()) {
-        MapInfo *info = MapManager::instance()->mapInfo(lot->mapName());
-        Q_ASSERT(info && info->map());
-        mapComposite->addMap(info, lot->pos(), lot->level());
-    }
-    if (processObjectGroupsNew(cell, mapComposite) == false)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(QLatin1String("The document has been modified."));
-        msgBox.exec();
-        return false;
-    }
+         foreach(WorldCellLot * lot, cell->lots()) {
+             MapInfo* info = MapManager::instance()->mapInfo(lot->mapName());
+             Q_ASSERT(info && info->map());
+             mapComposite->addMap(info, lot->pos(), lot->level());
+         }
+         if (processObjectGroups(cell, mapComposite) == false)
+         {
+             QMessageBox msgBox;
+             msgBox.setText(QLatin1String("The document has been modified."));
+             msgBox.exec();
+             return false;
+         }
+     }
     return true;
-
+#else
 #endif
 }
 
@@ -354,37 +301,376 @@ bool InGameMapFeatureGenerator::processObjectGroups(WorldCell *cell, MapComposit
 {
     foreach (Layer *layer, mapComposite->map()->layers()) {
         if (ObjectGroup *og = layer->asObjectGroup()) {
-            if (!processObjectGroup(cell, og, mapComposite->levelRecursive(),
-                                    mapComposite->originRecursive()))
+            if (!processObjectGroupNew(cell, og, mapComposite->levelRecursive(), mapComposite->originRecursive())) {
                 return false;
+            }
         }
     }
 
-    foreach (MapComposite *subMap, mapComposite->subMaps())
-        if (!processObjectGroups(cell, subMap))
+    foreach(MapComposite* subMap, mapComposite->subMaps())
+    {
+        if (!processObjectGroups(cell, subMap)) {
             return false;
+        }
+    }
 
     return true;
 }
 
-bool InGameMapFeatureGenerator::processObjectGroupsNew(WorldCell* cell, MapComposite* mapComposite)
+
+bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, ObjectGroup* objectGroup,
+    int levelOffset, const QPoint& offset)
 {
-    foreach(Layer * layer, mapComposite->map()->layers()) {
-        if (ObjectGroup* og = layer->asObjectGroup()) {
-            if (!processObjectGroupNew(cell, og, mapComposite->levelRecursive(),
-                mapComposite->originRecursive()))
+    int level;
+    if (!MapComposite::levelForLayer(objectGroup, &level)) {
+        return true;
+    }
+    level += levelOffset;
+
+    foreach(const MapObject * mapObject, objectGroup->objects()) {
+        if (!mapObject->width() || !mapObject->height())
+            continue;
+
+        int x = qFloor(mapObject->x());
+        int y = qFloor(mapObject->y());
+        int w = qCeil(mapObject->x() + mapObject->width()) - x;
+        int h = qCeil(mapObject->y() + mapObject->height()) - y;
+
+        QString name = mapObject->name();
+        if (name.isEmpty())
+            name = QLatin1String("unnamed");
+
+        if (objectGroup->map()->orientation() == Map::Isometric) {
+            x += 3 * level;
+            y += 3 * level;
+        }
+        QString objectType = QStringLiteral("yes");
+        if (name == QStringLiteral("restaurant"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("spiffo_dining"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("spiffoskitchen"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("bakery"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("dinerkitchen"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("cafe"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("sushidining"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("sushikitchen"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("knoxbutcher"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("spiffosstorage"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("tacokitchen"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("fishchipskitchen"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("jayschicken_kitchen"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("chinesekitchen"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("burger"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("mexican"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("kitchen_crepe"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("jayschicken"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("icecream"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("donut"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("deepfry"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("bowlingalley"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("bowllingalley"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("fitness"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("gym"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("italian"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("western"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("pizza"))
+        {
+            objectType = QStringLiteral("RestaurantsAndEntertainment");
+        }
+        else if (name == QStringLiteral("zippeestore"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("zippeestorage"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("gasstore"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("gasstorage"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("furniturestore"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("furniturestorage"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("gigamart"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("grocers"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("fossoil"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("aesthetic"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("storage"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("grocery"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("library"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("liquorstore"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("changeroom"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("grocery"))
+        {
+            objectType = QStringLiteral("RetailAndCommercial");
+        }
+        else if (name == QStringLiteral("medical"))
+        {
+            objectType = QStringLiteral("Medical");
+        }
+        else if (name == QStringLiteral("pharmacy"))
+        {
+            objectType = QStringLiteral("Medical");
+        }
+        else if (name == QStringLiteral("optometrist"))
+        {
+            objectType = QStringLiteral("Medical");
+        }
+        else if (name == QStringLiteral("laboratory"))
+        {
+            objectType = QStringLiteral("Medical");
+        }
+        else if (name == QStringLiteral("hospital"))
+        {
+            objectType = QStringLiteral("Medical");
+        }
+        else if (name == QStringLiteral("dentist"))
+        {
+            objectType = QStringLiteral("Medical");
+        }
+        else if (name == QStringLiteral("clinic"))
+        {
+            objectType = QStringLiteral("Medical");
+        }
+        else if (name == QStringLiteral("police"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("security"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("church"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("firestorage"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("armystorage"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("armysurplus"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("gunstore"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("post"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("theatre"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("school"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("bank"))
+        {
+            objectType = QStringLiteral("CommunityServices");
+        }
+        else if (name == QStringLiteral("motel"))
+        {
+            objectType = QStringLiteral("Hospitality");
+        }
+        else if (name == QStringLiteral("shed"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else if (name == QStringLiteral("storageunit"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else if (name == QStringLiteral("garage"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else if (name == QStringLiteral("mechanic"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else if (name == QStringLiteral("Foundry"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else if (name == QStringLiteral("barn"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else if (name == QStringLiteral("construction"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else if (name == QStringLiteral("railroad"))
+        {
+            objectType = QStringLiteral("Industrial");
+        }
+        else
+        {
+            objectType = QStringLiteral("Residential");
+        }
+
+        // Apply the MapComposite offset in the top-level map.
+        x += offset.x();
+        y += offset.y();
+
+        if (objectGroup->name().contains(QLatin1String("RoomDefs"))) {
+            if (x < 0 || y < 0 || x + w > 300 || y + h > 300) {
+                x = qBound(0, x, 300);
+                y = qBound(0, y, 300);
+                mError = tr("A RoomDef in cell %1,%2 overlaps cell boundaries.\nNear x,y=%3,%4")
+                    .arg(cell->x()).arg(cell->y()).arg(x).arg(y);
                 return false;
+            }
+
+            InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+
+            InGameMapProperty property;
+            property.mKey = QStringLiteral("building");
+            property.mValue = objectType;
+            feature->properties() += property;
+
+
+
+            feature->mGeometry.mType = QStringLiteral("Polygon");
+            InGameMapCoordinates coords;
+
+            coords += InGameMapPoint(x, y);
+            coords += InGameMapPoint(x + w, y);
+            coords += InGameMapPoint( x + w, y + h);
+            coords += InGameMapPoint( x, y + h);
+
+            feature->mGeometry.mCoordinates += coords;
+
+            mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
         }
     }
-
-    foreach(MapComposite * subMap, mapComposite->subMaps())
-        if (!processObjectGroupsNew(cell, subMap))
-            return false;
-
     return true;
 }
-
-
 
 namespace {
 
@@ -587,194 +873,6 @@ public:
 
 } // namespace
 
-bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, ObjectGroup* objectGroup, int levelOffset, const QPoint& offset)
-{
-    //if (objectGroup->name().contains(QLatin1String("RoomDefs")) == false) {
-    //    return true;
-    //}
-
-    int level;
-    if (!MapComposite::levelForLayer(objectGroup, &level))
-        return true;
-    level += levelOffset;
-
-    //if (level != 0)
-    //    return true;
-
-    QRect bounds;
-    QVector<QRect> rects;
-
-    foreach(const MapObject * mapObject, objectGroup->objects()) {
-        if (mapObject->width() * mapObject->height() <= 0)
-            continue;
-
-        int x = qFloor(mapObject->x());
-        int y = qFloor(mapObject->y());
-        int w = qCeil(mapObject->x() + mapObject->width()) - x;
-        int h = qCeil(mapObject->y() + mapObject->height()) - y;
-
-        if (objectGroup->map()->orientation() == Map::Isometric) {
-            x += 3 * level;
-            y += 3 * level;
-        }
-
-        // Apply the MapComposite offset in the top-level map.
-        x += offset.x();
-        y += offset.y();
-        if (objectGroup->name().contains(QLatin1String("RoomDefs"))) {
-            if (x < 0 || y < 0 || x + w > 300 || y + h > 300) {
-                x = qBound(0, x, 300);
-                y = qBound(0, y, 300);
-                mError = tr("A RoomDef in cell %1,%2 overlaps cell boundaries.\nNear x,y=%3,%4")
-                    .arg(cell->x()).arg(cell->y()).arg(x).arg(y);
-                return false;
-            }
-            if (bounds.isEmpty())
-                bounds = { x, y, w, h };
-            else
-                bounds |= { x, y, w, h };
-            rects += { x, y, w, h };
-        }
-    }
-
-    if (bounds.isEmpty())
-        return true;
-
-    OutlineGrid grid;
-    grid.setSize(bounds.width(), bounds.height());
-    for (auto& rect : rects) {
-        for (int y = 0; y < rect.height(); y++)
-            for (int x = 0; x < rect.width(); x++)
-                grid.setInner(rect.x() - bounds.x() + x, rect.y() - bounds.y() + y);
-    }
-
-    grid.trace(true, [&](QPolygon& nodes) {
-        nodes.translate(bounds.left(), bounds.top());
-
-    InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
-
-    InGameMapProperty property;
-    property.mKey = QStringLiteral("building");
-    property.mValue = QStringLiteral("yes");
-    feature->properties() += property;
-
-    feature->mGeometry.mType = QStringLiteral("Polygon");
-    InGameMapCoordinates coords;
-    for (auto& point : nodes) {
-        coords += InGameMapPoint(point.x(), point.y());
-    }
-    feature->mGeometry.mCoordinates += coords;
-
-    mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
-        });
-
-    return true;
-}
-
-bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, MapInfo* mapInfo, ObjectGroup* objectGroup, int levelOffset, const QPoint& offset)
-{
-    //if (objectGroup->name().contains(QLatin1String("RoomDefs")) == false) {
-    //    return true;
-    //}
-
-    int level;
-    if (!MapComposite::levelForLayer(objectGroup, &level))
-        return true;
-    level += levelOffset;
-
-    //if (level != 0)
-    //    return true;
-
-    QRect bounds;
-    QVector<QRect> rects;
-
-    foreach(const MapObject * mapObject, objectGroup->objects()) {
-#if 0
-        if (mapObject->name().isEmpty() || mapObject->type().isEmpty())
-            continue;
-#endif
-        if (mapObject->width() * mapObject->height() <= 0)
-            continue;
-
-        int x = qFloor(mapObject->x());
-        int y = qFloor(mapObject->y());
-        int w = qCeil(mapObject->x() + mapObject->width()) - x;
-        int h = qCeil(mapObject->y() + mapObject->height()) - y;
-
-        if (objectGroup->map()->orientation() == Map::Isometric) {
-            x += 3 * level;
-            y += 3 * level;
-        }
-
-        // Apply the MapComposite offset in the top-level map.
-        x += offset.x();
-        y += offset.y();
-
-        if (x < 0 || y < 0 || x + w > 300 || y + h > 300) {
-            x = qBound(0, x, 300);
-            y = qBound(0, y, 300);
-            mError = tr("A RoomDef in cell %1,%2 overlaps cell boundaries.\nNear x,y=%3,%4")
-                .arg(cell->x()).arg(cell->y()).arg(x).arg(y);
-            return false;
-        }
-        if (bounds.isEmpty())
-            bounds = { x, y, w, h };
-        else
-            bounds |= { x, y, w, h };
-        rects += { x, y, w, h };
-    }
-
-    if (bounds.isEmpty())
-        return true;
-
-    OutlineGrid grid;
-    grid.setSize(bounds.width(), bounds.height());
-    for (auto& rect : rects) {
-        for (int y = 0; y < rect.height(); y++)
-            for (int x = 0; x < rect.width(); x++)
-                grid.setInner(rect.x() - bounds.x() + x, rect.y() - bounds.y() + y);
-    }
-
-    grid.trace(true, [&](QPolygon& nodes) {
-        nodes.translate(bounds.left(), bounds.top());
-
-    if (isInvalidBuildingPolygon(nodes)) {
-        return;
-    }
-
-    InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
-
-    InGameMapProperty property;
-    property.mKey = QStringLiteral("building");
-    QString LEGEND = QStringLiteral("Legend");
-    if (mapInfo->map()->properties().contains(LEGEND)) {
-        property.mValue = mapInfo->map()->property(LEGEND);
-    }
-    else {
-        property.mValue = QStringLiteral("yes");
-    }
-    feature->properties() += property;
-    for (auto it = mapInfo->map()->properties().cbegin(); it != mapInfo->map()->properties().cend(); it++) {
-        if (it.key() == LEGEND) {
-            continue;
-        }
-        property.mKey = it.key();
-        property.mValue = it.value();
-        feature->properties() += property;
-    }
-
-    feature->mGeometry.mType = QStringLiteral("Polygon");
-    InGameMapCoordinates coords;
-    for (auto& point : nodes) {
-        coords += InGameMapPoint(point.x(), point.y());
-    }
-    feature->mGeometry.mCoordinates += coords;
-
-    mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
-        });
-
-    return true;
-}
 
 bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, ObjectGroup *objectGroup, int levelOffset, const QPoint &offset)
 {
@@ -1787,11 +1885,13 @@ bool InGameMapFeatureGenerator::doRoadTertiary(WorldCell* cell, MapInfo* mapInfo
         for (auto* cell : qAsConst(cells)) {
             if (cell->isEmpty())
                 continue;
+            // blends_street_01_16
+            // blends_street_01_21
             // blends_street_01_48
             // blends_street_01_53
             // blends_street_01_54
             // blends_street_01_55
-            if ((cell->tile->id() == 48 || cell->tile->id() == 53 || cell->tile->id() == 54 || cell->tile->id() == 55) && (cell->tile->tileset()->name() == QStringLiteral("blends_street_01"))) {
+            if ((cell->tile->id() == 48 || cell->tile->id() == 53 || cell->tile->id() == 54 || cell->tile->id() == 55 || cell->tile->id() == 16 || cell->tile->id() == 21) && (cell->tile->tileset()->name() == QStringLiteral("blends_street_01"))) {
                 return true;
             }
         }

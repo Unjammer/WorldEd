@@ -273,6 +273,9 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
     }
 #endif
 
+    int IMGWIDTH = Preferences::instance()->thumbWidth();
+
+
     QFileInfo fileInfo(mapFilePath);
     QFileInfo imageInfo = imageFileInfo(mapFilePath);
     QFileInfo imageDataInfo = imageDataFileInfo(imageInfo);
@@ -281,7 +284,8 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
         if (!reader.size().isValid())
             QMessageBox::warning(MainWindow::instance(), tr("Error Loading Image"),
                                  tr("An error occurred trying to read a map thumbnail image.\n") + imageInfo.absoluteFilePath());
-        if (reader.size().width() == IMAGE_WIDTH) {
+        //if (reader.size().width() == IMAGE_WIDTH) {
+        if (reader.size().width() == IMGWIDTH) {
             ImageData data = readImageData(imageDataInfo);
             // If the image was originally created with some tilesets missing,
             // try to recreate the image in case those tileset issues were
@@ -341,7 +345,8 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
         return ImageData();
     }
 
-    qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
+   // qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
+    qreal scale = IMGWIDTH / qreal(mapSize.width());
     mapSize *= scale;
 
     ImageData data;
@@ -1203,7 +1208,10 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
     if (mapSize.isEmpty())
         return MapImageData();
 
-    qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
+    int IMGWIDTH = Preferences::instance()->thumbWidth();
+
+    //qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
+    qreal scale = IMGWIDTH / qreal(mapSize.width());
     mapSize *= scale;
 
     QImage image(mapSize, QImage::Format_ARGB32);

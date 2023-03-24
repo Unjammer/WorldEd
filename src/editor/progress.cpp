@@ -59,6 +59,23 @@ void Progress::setMainWindow(QWidget *mainWindow)
     mDialog->setWindowFlags(Qt::CustomizeWindowHint | Qt::Dialog);
 }
 
+//TIM BAKER 07032023
+bool Progress::isVisible()
+{
+    return mDialog->isVisible();
+}
+
+void Progress::hide()
+{
+    mDialog->hide();
+}
+
+void Progress::show()
+{
+    mDialog->show();
+}
+
+
 void Progress::begin(const QString &text)
 {
     mLabel->setText(text);

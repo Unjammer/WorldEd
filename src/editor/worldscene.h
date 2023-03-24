@@ -486,6 +486,8 @@ public:
     const QList<OtherWorld*> &otherWorlds() const
     { return mOtherWorlds; }
 
+    //TIM BAKER 07032023
+    void cancelLoadingThumbnails();
 signals:
     
 public slots:

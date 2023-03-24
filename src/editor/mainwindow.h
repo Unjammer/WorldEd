@@ -149,6 +149,10 @@ public slots:
     void removeInGameMapPoint();
     void readInGameMapFeaturesXML();
     void writeInGameMapFeaturesXML();
+
+    //TIM BAKER 07032023
+    void overwriteInGameMapFeaturesXML();
+
     void creaeInGameMapImagePyramid();
 
     void setStatusBarCoords(int x, int y);

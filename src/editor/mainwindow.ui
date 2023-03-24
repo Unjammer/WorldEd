@@ -382,6 +382,7 @@
     <addaction name="separator"/>
     <addaction name="actionReadInGameMapFeaturesXML"/>
     <addaction name="actionWriteInGameMapFeaturesXML"/>
+    <addaction name="actionOverwriteInGameMapFeaturesXML"/>
     <addaction name="actionCreateImagePyramid"/>
    </widget>
    <widget class="QMenu" name="menuForaging">
@@ -990,6 +991,11 @@
    </property>
    <property name="text">
     <string>Show Zones and World in World View</string>
+   </property>
+  </action>
+  <action name="actionOverwriteInGameMapFeaturesXML">
+   <property name="text">
+    <string>Overwrite XXX</string>
    </property>
   </action>
  </widget>

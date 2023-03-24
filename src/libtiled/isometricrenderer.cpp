@@ -134,7 +134,7 @@ QPainterPath IsometricRenderer::shape(const MapObject *object) const
 
 #ifdef ZOMBOID
 void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
-                                 QColor gridColor, int level) const
+                                 QColor gridColor, int level, int opacity, int width) const
 {
     Q_UNUSED(level)
 #else
@@ -157,10 +157,12 @@ void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
                           pixelToTileCoords(r.bottomLeft()).y());
 
     gridColor.setAlpha(128);
+    gridColor.setAlpha(opacity);
 
 #ifdef ZOMBOID
     QPen pen;
     pen.setCosmetic(true);
+    pen.setWidth(width);
     QBrush brush(gridColor, Qt::Dense4Pattern);
     brush.setTransform(QTransform::fromScale(1/painter->transform().m11(),
                                              1/painter->transform().m22()));

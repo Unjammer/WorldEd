@@ -288,7 +288,7 @@ public:
     bool isVisible() const { return mVisible; }
 
     int index();
-
+    bool isBasement() const;
     bool isRoomTone() const;
     bool isSpawnPoint() const;
 

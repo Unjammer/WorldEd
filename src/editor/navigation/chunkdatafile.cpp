@@ -54,17 +54,19 @@ void ChunkDataFile::fromMap(int cellX, int cellY, MapComposite *mapComposite, co
             for (int y = 0; y < IsoChunk::WIDTH; y++) {
                 for (int x = 0; x < IsoChunk::WIDTH; x++) {
                     IsoGridSquare *sq = chunk->getGridSquare(x, y, 0);
-                    quint8 bits = 0;
-                    if (sq->isSolid())
-                        bits |= BIT_SOLID;
-                    if (sq->isBlockedNorth())
-                        bits |= BIT_WALLN;
-                    if (sq->isBlockedWest())
-                        bits |= BIT_WALLW;
-                    if (sq->isWater())
-                        bits |= BIT_WATER;
-                    if (sq->isRoom())
-                        bits |= BIT_ROOM;
+                    quint8 bits = 4;
+ //                   quint8 bits = 0;
+                    //if (sq->isSolid())
+                    //    bits |= BIT_SOLID;
+                    //if (sq->isBlockedNorth())
+                    //    bits |= BIT_WALLN;
+                    //if (sq->isBlockedWest())
+                    //    bits |= BIT_WALLW;
+                    //if (sq->isWater())
+                    //    bits |= BIT_WATER;
+                    //if (sq->isRoom())
+                    //    bits |= BIT_ROOM;
+
                     bitsArray[x + y * IsoChunk::WIDTH] = bits;
                     if (bits == 0)
                         empty++;

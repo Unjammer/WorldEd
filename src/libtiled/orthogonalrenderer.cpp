@@ -153,7 +153,7 @@ QPainterPath OrthogonalRenderer::shape(const MapObject *object) const
 
 #ifdef ZOMBOID
 void OrthogonalRenderer::drawGrid(QPainter *painter, const QRectF &rect,
-                                  QColor gridColor, int level) const
+                                  QColor gridColor, int level, int opacity, int width) const
 {
     Q_UNUSED(level)
 #else
@@ -175,8 +175,11 @@ void OrthogonalRenderer::drawGrid(QPainter *painter, const QRectF &rect,
                           map()->height() * tileHeight + 1);
 
     gridColor.setAlpha(128);
+    gridColor.setAlpha(opacity);
 
     QPen gridPen(gridColor);
+    gridPen.setWidth(width);
+
     gridPen.setDashPattern(QVector<qreal>() << 2 << 2);
 
     if (startY < endY) {

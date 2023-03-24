@@ -65,6 +65,13 @@ PreferencesDialog::PreferencesDialog(WorldDocument* worldDoc, QWidget* parent)
     ui->hsSizeR->setValue(int(prefs->hsSizeR()));
     ui->lblSizeR->setText(QString::number(int(prefs->hsSizeR())));
 
+    ui->gridOpacity->setValue(int(prefs->GridOpacity()));
+    ui->gridWidth->setValue(int(prefs->GridWidth()));
+    ui->thumbWidth->setValue(int(prefs->ThumbWidth()));
+
+    connect(ui->gridOpacity, qOverload<int>(&QSpinBox::valueChanged), Preferences::instance(), &Preferences::setGridOpacity);
+    connect(ui->gridWidth, qOverload<int>(&QSpinBox::valueChanged), Preferences::instance(), &Preferences::setGridWidth);
+    connect(ui->thumbWidth, qOverload<int>(&QSpinBox::valueChanged), Preferences::instance(), &Preferences::setThumbWidth);
   
 }
 
@@ -102,6 +109,10 @@ void PreferencesDialog::accept()
     prefs->setHsSizeHT(ui->hsSizeHT->value());
     prefs->setHsThresholdR(ui->hsThresholdR->value());
     prefs->setHsSizeR(ui->hsSizeR->value());
+
+    prefs->setGridOpacity(ui->gridOpacity->value());
+    prefs->setGridWidth(ui->gridWidth->value());
+    prefs->setThumbWidth(ui->thumbWidth->value());
 
     prefs->setLoadLastActivProject(ui->LoadLastActiv->isChecked());
     prefs->setenableDarkTheme(ui->enableDarkTheme->isChecked());

@@ -32,6 +32,7 @@
 
 #include <QMenu>
 #include <QToolButton>
+#include <preferences.h>
 
 /////
 
@@ -243,7 +244,15 @@ QVariant PropertiesModel::data(const QModelIndex &index, int role) const
         }
         case Qt::ForegroundRole:
             if (index.column() && (p->mValue != p->mDefinition->mDefaultValue))
-                return QBrush(Qt::blue);
+            {   
+                if (Preferences::instance()->enableDarkTheme())
+                {
+                    return QBrush(QColor("#db4421"));
+                }
+                else {
+                    return QBrush(Qt::blue);
+                }
+            }
             break;
         case Qt::DisplayRole:
             return index.column() ? p->mValue : p->mDefinition->mName;

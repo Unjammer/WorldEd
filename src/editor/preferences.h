@@ -86,6 +86,20 @@ public:
     int hsSizeHT() const { return mhsSizeHT; }
     int hsThresholdR() const { return mhsThresholdR; }
     int hsSizeR() const { return mhsSizeR; }
+    
+    int gridOpacity() const
+    {
+        return mGridOpacity;
+    }
+
+    int gridWidth() const
+    {
+        return mGridWidth;
+    }
+    int thumbWidth() const
+    {
+        return mThumbWidth;
+    }
 
     bool showZonesInWorldView() const { return mShowZonesInWorldView; }
     bool showZonesWorldInWorldView() const { return mShowZonesWorldInWorldView; }
@@ -101,6 +115,9 @@ public:
 
     bool LoadLastActivProject() const { return mLoadLastActivProject; }
     bool enableDarkTheme() const { return menableDarkTheme; }
+    int GridOpacity() const { return mGridOpacity;  }
+    int GridWidth() const { return mGridWidth;  }
+    int ThumbWidth() const { return mThumbWidth;  }
     void setLoadLastActivProject(bool show);
     void setenableDarkTheme(bool show);
     void setHsThresholdHP(int threshold);
@@ -109,6 +126,10 @@ public:
     void setHsSizeHT(int size);
     void setHsThresholdR(int threshold);
     void setHsSizeR(int size);
+    void setGridOpacity(int newOpacity);
+    void setGridWidth(int newWidth);
+    void setThumbWidth(int newWidth);
+
 
 signals:
     void snapToGridChanged(bool snapToGrid);
@@ -128,6 +149,11 @@ signals:
     void showZonesInWorldViewChanged(bool show);
 
     void showZonesWorldInWorldViewChanged(bool show);
+
+
+    void gridOpacityChanged(int newOpacity);
+    void gridWidthChanged(int newWidth);
+    void thumbWidthChanged(int newWidth);
 
 #define MINIMAP_WIDTH_MIN 256
 #define MINIMAP_WIDTH_MAX 512
@@ -173,6 +199,7 @@ public slots:
     void setHighlightRoomUnderPointer(bool highlight);
     void setShowOtherWorlds(bool show);
 
+
 private:
     Preferences();
 
@@ -215,6 +242,11 @@ private:
 
     bool mHighlightRoomUnderPointer;
     bool mShowOtherWorlds;
+
+    int mGridOpacity;
+    int mGridWidth;
+    int mThumbWidth;
+
     QString mThumbnailsDirectory;
 
     static Preferences *mInstance;

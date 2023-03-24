@@ -204,6 +204,7 @@ MapsView::MapsView(QWidget *parent)
     QStringList filters;
     filters << QLatin1String("*.tmx")
             << QLatin1String("*.tbx")
+            << QLatin1String("*.lot")
             << QLatin1String("*.pzw");
     foreach (QString format, BMPToTMX::supportedImageFormats())
         filters << QLatin1String("*.") + format;

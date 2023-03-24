@@ -313,6 +313,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionRemoveInGameMapHole, &QAction::triggered, this, &MainWindow::removeInGameMapHole);
     connect(ui->actionReadInGameMapFeaturesXML, &QAction::triggered, this, &MainWindow::readInGameMapFeaturesXML);
     connect(ui->actionWriteInGameMapFeaturesXML, &QAction::triggered, this, &MainWindow::writeInGameMapFeaturesXML);
+
+    connect(ui->actionOverwriteInGameMapFeaturesXML, &QAction::triggered, this, &MainWindow::overwriteInGameMapFeaturesXML);
+
     connect(ui->actionCreateImagePyramid, &QAction::triggered, this, &MainWindow::creaeInGameMapImagePyramid);
 
     connect(ui->actionSnapToGrid, &QAction::toggled, prefs, &Preferences::setSnapToGrid);
@@ -1453,7 +1456,7 @@ void MainWindow::updateWindowTitle()
     else {
         fileName = QDir::toNativeSeparators(fileName);
     }
-    setWindowTitle(tr("[*]%1 - PZWorldEd (Unofficial fork by Alree build:230306)").arg(fileName));
+    setWindowTitle(tr("[*]%1 - PZWorldEd (Unofficial fork by Alree build:230311)").arg(fileName));
     setWindowFilePath(fileName);
     bool isModified = mCurrentDocument ? mCurrentDocument->isModified() : false;
     if (mCurrentDocument && mCurrentDocument->isCellDocument())
@@ -2337,6 +2340,9 @@ void MainWindow::readInGameMapFeaturesXML()
     if (bFeatureToolActive == false && EditInGameMapFeatureTool::instance().isEnabled()) {
         ToolManager::instance()->selectTool(EditInGameMapFeatureTool::instancePtr());
     }
+
+    //TIM BAKER ADDITION 07032023
+    updateActions();
 }
 
 void MainWindow::clearCells()
@@ -2360,6 +2366,27 @@ void MainWindow::clearCells()
     foreach (WorldCell *cell, cells)
         worldDoc->clearCell(cell);
     undoStack->endMacro();
+}
+
+//TIM BAKER ADDITION 07032023
+void MainWindow::overwriteInGameMapFeaturesXML()
+{
+    WorldDocument* worldDoc = currentWorldDocument();
+
+    PROGRESS progress(QStringLiteral("Writing InGameMap XML"), this);
+
+    InGameMapWriter writer;
+    QString fileName = Preferences::instance()->worldMapXMLFile();
+    if (!writer.writeWorld(worldDoc->world(), fileName)) {
+        qWarning("Failed to write InGameMap XML.");
+        return;
+    }
+
+    InGameMapWriterBinary writerBinary;
+    if (!writerBinary.writeWorld(worldDoc->world(), fileName + QStringLiteral(".bin"))) {
+        qWarning("Failed to write InGameMap Binary.");
+        return;
+    }
 }
 
 void MainWindow::clearMapOnly()
@@ -2447,49 +2474,6 @@ void MainWindow::writeInGameMapFeaturesXML()
             qWarning("Failed to write InGameMap Binary.");
             return;
         }
-
-
-        
-        //QFile file(QFileInfo(fileName).absoluteFilePath());
-        //if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        //{
-        //    qDebug() << "Failed to open file";
-        //    return;
-        //}
-        //QDomDocument doc;
-        //if (!doc.setContent(&file))
-        //{
-        //    qDebug() << "Failed to parse file content";
-        //    file.close();
-        //    return;
-        //}
-        //file.close();
-
-        //QDomElement world = doc.firstChildElement(QStringLiteral("world"));
-        //QDomNodeList cells = world.elementsByTagName(QStringLiteral("cell"));
-        //for (int i = 0; i < cells.count(); i++)
-        //{
-        //    QDomNode cell = cells.at(i);
-        //    QDomNodeList features = cell.toElement().elementsByTagName(QStringLiteral("feature"));
-        //    for (int j = 0; j < features.count(); j++)
-        //    {
-        //        QDomNode feature = features.at(j);
-        //        QDomNodeList points = feature.toElement().elementsByTagName(QStringLiteral("point"));
-        //        if (points.count() < 3)
-        //        {
-        //            feature.parentNode().removeChild(feature);
-        //            j--;
-        //        }
-        //    }
-        //}
-        //
-        //QFile fileNew(QFileInfo(fileName).absoluteFilePath());
-        //if (!fileNew.open(QIODevice::WriteOnly | QIODevice::Text))
-        //    return;
-
-        //QTextStream stream(&fileNew);
-        //doc.save(stream, 0);
-        //fileNew.close();
     }
 }
 
@@ -2628,6 +2612,9 @@ void MainWindow::updateActions()
     CellDocument *cellDoc = hasDoc ? doc->asCellDocument() : 0;
     WorldDocument *worldDoc = hasDoc ? doc->asWorldDocument() : 0;
 
+    //TIM BAKER 07032023
+    World* world = worldDoc ? worldDoc->world() : (cellDoc ? cellDoc->world() : nullptr);
+
     ui->actionSave->setEnabled(hasDoc);
     ui->actionSaveAs->setEnabled(hasDoc);
     ui->actionClose->setEnabled(hasDoc);
@@ -2699,6 +2686,21 @@ void MainWindow::updateActions()
     ui->actionConvertToPolygon->setEnabled(canConvertToInGameMapPolygon());
     ui->actionReadInGameMapFeaturesXML->setEnabled(hasDoc);
     ui->actionWriteInGameMapFeaturesXML->setEnabled(hasDoc);
+
+    //TIM BAKER 07032023
+    QString featuresXML = Preferences::instance()->worldMapXMLFile();
+    bool hasReadFeaturesXML = false;
+    if (hasDoc && !featuresXML.isEmpty()) {
+        for (auto* cell : world->cells()) {
+            const InGameMapFeatures& features = cell->inGameMap().features();
+            if (features.isEmpty() == false) {
+                hasReadFeaturesXML = true;
+                break;
+            }
+        }
+    }
+    ui->actionOverwriteInGameMapFeaturesXML->setText(tr("Overwrite \"%1\" (last loaded XML)").arg(featuresXML.isEmpty() ? tr("features.xml") : QFileInfo(featuresXML).absoluteFilePath()));
+    ui->actionOverwriteInGameMapFeaturesXML->setEnabled(hasDoc && hasReadFeaturesXML);
 
     ui->actionSnapToGrid->setEnabled(cellDoc != 0);
     ui->actionShowCoordinates->setEnabled(worldDoc != 0);

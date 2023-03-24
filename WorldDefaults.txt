@@ -110,6 +110,11 @@ objecttype
     name = FarmLand
 }
 
+objecttype
+{
+    name = Ranch
+}
+
 objectgroup
 {
     name = ParkingStall
@@ -122,6 +127,13 @@ objectgroup
     name = TownZone
     color = #aa0000
     defaulttype = TownZone
+}
+
+objectgroup
+{
+    name = Ranch
+    color = #ff8000
+    defaulttype = Ranch
 }
 
 objectgroup
@@ -425,4 +437,128 @@ objectgroup
     color = #0000ff
     defaulttype = RoomTone
 }
+
+enum
+{
+    name = Professions
+    values = [
+    accountant
+    bookkeeper
+    burglar
+    cashier
+    chef
+    constructionworker
+    cook
+    customerservice
+    doctor
+    drugdealer
+    farmer
+    fastfoodcook
+    fireofficer
+    itworker
+    janitor
+    militaryofficer
+    militarysoldier
+    nurse
+    officeworker
+    parkranger
+    policeofficer
+    salesperson
+    secretary
+    securityguard
+    shopclerk
+    teacher
+    truckdriver
+    unemployed
+    waiter
+    ]
+    multi = false
+}
+
+enum
+{
+    name = Ranch
+    values = [
+	chicken
+	cow
+	pig
+	sheep
+    ]
+    multi = false
+}
+
+property
+{
+    name = Ranch
+    default = all
+    enum = Ranch
+}
+
+    property
+    {
+        name = StairX
+        value = 0
+    }
+    property
+    {
+        name = StairY
+        value = 0
+    }
+	    property
+    {
+        name = StairDirection
+        value = N
+    }
+
+objecttype
+{
+    name = Basement
+}
+
+objectgroup
+{
+    name = Basement
+    color = #00ffee
+    defaulttype = Basement
+}
+
+property
+{
+        name = StairX
+        value = 0
+}
+
+property
+{
+        name = StairY
+        value = 0
+}
+
+property
+{
+        name = StairDirection
+        value = N
+}
+
+template
+{
+    name = Basement
+    property
+    {
+        name = StairX
+        value = 0
+    }
+    property
+    {
+        name = StairY
+        value = 0
+    }
+	    property
+    {
+        name = StairDirection
+        value = N
+    }
+}
+
+
 

@@ -300,8 +300,17 @@ bool LotFilesManager::generateCell(WorldCell *cell)
     // Check for missing tilesets.
     for (MapComposite *mc : mapComposite->maps()) {
         if (mc->map()->hasUsedMissingTilesets()) {
-            mError = tr("Some tilesets are missing in a map in cell %1,%2:\n%3")
-                    .arg(cell->x()).arg(cell->y()).arg(mc->mapInfo()->path());
+            QString missingTileSet = QLatin1Literal("");
+            foreach(Tileset *ts, mc->map()->missingTilesets())
+            {
+                foreach(Tileset *tsUsed, mc->map()->usedTilesets())
+                {
+                    if (ts->name() == tsUsed->name())
+                        missingTileSet.append(QLatin1Literal("- ") + ts->name() + QLatin1Literal("\n"));
+                }
+            }
+            mError = tr("Some tilesets are missing in a map in cell %1,%2:\n%3\n\nMissing tilesets:\n%4")
+                    .arg(cell->x()).arg(cell->y()).arg(mc->mapInfo()->path()).arg(missingTileSet);
             return false;
         }
     }

@@ -110,6 +110,11 @@ Preferences::Preferences()
     mhsSizeHT = mSettings->value(QLatin1String("HsSizeHT"), 4).toInt();
     mhsThresholdR = mSettings->value(QLatin1String("HsThresholdR"), 10).toInt();
     mhsSizeR = mSettings->value(QLatin1String("HsSizeR"), 4).toInt();
+
+    mGridOpacity = mSettings->value(QLatin1String("GridOpacity"), 128).toInt();
+    mGridWidth = mSettings->value(QLatin1String("GridWidth"), 1).toInt();
+    mThumbWidth = mSettings->value(QLatin1String("ThumbWidth"), 512).toInt();
+
     mSettings->endGroup();
 
     mSettings->beginGroup(QLatin1String("MapsDirectory"));
@@ -215,6 +220,33 @@ QString Preferences::luaPath() const
 #else
 #error "wtf system is this???"
 #endif
+}
+
+void Preferences::setGridOpacity(int newOpacity)
+{
+    if (mGridOpacity == newOpacity)
+        return;
+    mGridOpacity = newOpacity;
+    mSettings->setValue(QLatin1String("GridOpacity"), mGridOpacity);
+    emit gridOpacityChanged(mGridOpacity);
+}
+
+void Preferences::setGridWidth(int newWidth)
+{
+    if (mGridWidth == newWidth)
+        return;
+    mGridWidth = newWidth;
+    mSettings->setValue(QLatin1String("GridWidth"), mGridWidth);
+    emit gridWidthChanged(mGridWidth);
+}
+
+void Preferences::setThumbWidth(int newWidth)
+{
+    if (mThumbWidth == newWidth)
+        return;
+    mThumbWidth = newWidth;
+    mSettings->setValue(QLatin1String("ThumbWidth"), mThumbWidth);
+    emit thumbWidthChanged(mThumbWidth);
 }
 
 QString Preferences::luaPath(const QString &fileName) const

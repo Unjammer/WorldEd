@@ -61,6 +61,9 @@ OBJECTS_DIR = .obj
 
 SOURCES += main.cpp\
     generatelotsfailuredialog.cpp \
+	Logger.cpp \
+	loadthumbnailsdialog.cpp \
+	    savescreenshot.cpp \
         mainwindow.cpp \
     InGameMap/clipper.cpp \
     InGameMap/ingamemapcell.cpp \
@@ -168,6 +171,7 @@ SOURCES += main.cpp\
     waterflow.cpp
 HEADERS  += mainwindow.h \
     generatelotsfailuredialog.h \
+	Logger.h \
     InGameMap/clipper.hpp \
     InGameMap/ingamemapcell.h \
     InGameMap/ingamemapdock.h \
@@ -180,6 +184,8 @@ HEADERS  += mainwindow.h \
     InGameMap/ingamemapundo.h \
     InGameMap/ingamemapwriter.h \
     InGameMap/ingamemapwriterbinary.h \
+	savescreenshot.h \
+	loadthumbnailsdialog.h \
     tilesetstxtfile.h \
     worldview.h \
     worldscene.h \
@@ -276,6 +282,7 @@ FORMS    += mainwindow.ui \
     InGameMap/ingamemapimagepyramidwindow.ui \
     InGameMap/ingamemappropertiesform.ui \
     InGameMap/ingamemappropertydialog.ui \
+	loadthumbnailsdialog.ui \
     propertiesview.ui \
     propertiesdialog.ui \
     templatesdialog.ui \
