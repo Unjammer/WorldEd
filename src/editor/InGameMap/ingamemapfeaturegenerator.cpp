@@ -17,6 +17,7 @@
 
 #include "ingamemapfeaturegenerator.h"
 
+#include "generatelotsfailuredialog.h"
 #include "lotfilesmanager.h"
 #include "mainwindow.h"
 #include "mapcomposite.h"
@@ -25,6 +26,8 @@
 #include "world.h"
 #include "worldcell.h"
 #include "worlddocument.h"
+
+#include "BuildingEditor/roofhiding.h"
 
 #include "bmpblender.h"
 #include "mapobject.h"
@@ -40,8 +43,6 @@
 #include <QUndoStack>
 
 #include "clipper.hpp"
-#include <QDomDocument>
-#include <qfuture.h>
 
 using namespace Tiled;
 
@@ -58,8 +59,6 @@ InGameMapFeatureGenerator::InGameMapFeatureGenerator(QObject *parent) :
     QObject(parent)
 {
 }
-
-
 
 bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMapFeatureGenerator::GenerateMode mode, FeatureType type)
 {
@@ -80,10 +79,11 @@ bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMap
     }
     PROGRESS progress(QStringLiteral("Generating %1 features").arg(typeStr));
 
+    mFailures.clear();
+
     mWorldDoc->undoStack()->beginMacro(QStringLiteral("Generate InGameMap %1 Features").arg(typeStr));
 
     if (mode == GenerateSelected) {
-
         for (WorldCell* cell : worldDoc->selectedCells())
         {
             if (!generateCell(cell)) {
@@ -103,14 +103,13 @@ bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMap
             msgBox.exec();
         }
     } else {
-
         for (int y = 0; y < world->height(); y++) {
             for (int x = 0; x < world->width(); x++) {
                 if (!generateCell(world->cellAt(x, y))) {
                     mWorldDoc->undoStack()->endMacro();
                     goto errorExit;
                 }
-                
+
             }
         }
         auto stop = std::chrono::high_resolution_clock::now();
@@ -122,12 +121,20 @@ bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMap
         msgBox.isTopLevel();
         msgBox.exec();
     }
-    
-    
 
     mWorldDoc->undoStack()->endMacro();
 
     MapManager::instance()->purgeUnreferencedMaps();
+
+    if (!mFailures.isEmpty()) {
+        QStringList errorList;
+        for (const GenerateCellFailure &failure : mFailures) {
+            errorList += QString(QStringLiteral("Cell %1,%2: %3")).arg(failure.cell->x()).arg(failure.cell->y()).arg(failure.error);
+        }
+        GenerateLotsFailureDialog dialog(errorList, MainWindow::instance());
+        dialog.exec();
+    }
+
 #if 0
     // While displaying this, the MapManager's FileSystemWatcher might see some
     // changed .tmx files, which results in the PROGRESS dialog being displayed.
@@ -135,7 +142,6 @@ bool InGameMapFeatureGenerator::generateWorld(WorldDocument *worldDoc, InGameMap
     QMessageBox::information(MainWindow::instance(),
                              tr("InGameMap Feature Generator"), tr("Finished!"));
 #endif
-
     return true;
 
 errorExit:
@@ -162,22 +168,17 @@ bool InGameMapFeatureGenerator::shouldGenerateCell(WorldCell *cell)
 
 bool InGameMapFeatureGenerator::generateCell(WorldCell *cell)
 {
-
     if (!shouldGenerateCell(cell))
-    {
-
         return true;
-    }
 
     if (cell->mapFilePath().isEmpty()) {
-
         return true;
     }
 
-    MapInfo *mapInfo = MapManager::instance()->loadMap(cell->mapFilePath(), mWorldDoc->fileName(), false, MapManager::PriorityHigh);
+    MapInfo *mapInfo = MapManager::instance()->loadMap(cell->mapFilePath(),
+                                                       mWorldDoc->fileName());
     if (!mapInfo) {
         mError = MapManager::instance()->errorString();
-        qDebug() << mError;
         return false;
     }
 
@@ -216,7 +217,7 @@ bool InGameMapFeatureGenerator::generateCell(WorldCell *cell)
 bool InGameMapFeatureGenerator::doBuildings(WorldCell *cell, MapInfo *mapInfo)
 {
 
-    
+
         // Remove all "building=" features
         auto& features = cell->inGameMap().features();
         for (int i = features.size() - 1; i >= 0; i--) {
@@ -256,11 +257,16 @@ bool InGameMapFeatureGenerator::doBuildings(WorldCell *cell, MapInfo *mapInfo)
         for (WorldCellLot* lot : cell->lots()) {
             MapInfo* info = MapManager::instance()->mapInfo(lot->mapName());
             if (info != nullptr && info->map() != nullptr) {
-                for (ObjectGroup* og : info->map()->objectGroups()) {
-                    if (processObjectGroup(cell, info, og, lot->level(), lot->pos()) == false) {
-                        return false;
-                    }
+            QRect bounds;
+            QVector<QRect> rects;
+            for (ObjectGroup *og : info->map()->objectGroups()) {
+                if (processObjectGroup(cell, info, og, lot->level(), lot->pos(), bounds, rects) == false) {
+                    return false;
                 }
+            }
+            if (traceBuildingOutline(cell, info, bounds, rects) == false) {
+                return false;
+            }
             }
         }
     }
@@ -317,17 +323,57 @@ bool InGameMapFeatureGenerator::processObjectGroups(WorldCell *cell, MapComposit
     return true;
 }
 
-
 bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, ObjectGroup* objectGroup,
     int levelOffset, const QPoint& offset)
 {
-    int level;
-    if (!MapComposite::levelForLayer(objectGroup, &level)) {
-        return true;
-    }
-    level += levelOffset;
+    int level = objectGroup->level() + levelOffset;
 
-    foreach(const MapObject * mapObject, objectGroup->objects()) {
+    // Préparer les correspondances entre noms et types d'objet
+    static const QMap<QString, QString> objectTypeMap = {
+        // Restaurants and Entertainment
+        { QStringLiteral("restaurant"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("spiffo_dining"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("spiffoskitchen"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("bakery"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("dinerkitchen"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("cafe"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("sushidining"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("sushikitchen"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("knoxbutcher"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("spiffosstorage"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("tacokitchen"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("fishchipskitchen"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("jayschicken_kitchen"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("chinesekitchen"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("burger"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("mexican"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("kitchen_crepe"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("jayschicken"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("icecream"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("donut"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("deepfry"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("bowlingalley"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("bowllingalley"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("fitness"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("gym"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("italian"), QStringLiteral("RestaurantsAndEntertainment")},
+               { QStringLiteral("western"), QStringLiteral("RestaurantsAndEntertainment")}, { QStringLiteral("pizza"), QStringLiteral("RestaurantsAndEntertainment")},
+               // Retail and Commercial
+               { QStringLiteral("zippeestore"), QStringLiteral("RetailAndCommercial")}, { QStringLiteral("zippeestorage"), QStringLiteral("RetailAndCommercial")},
+               { QStringLiteral("gasstore"), QStringLiteral("RetailAndCommercial")}, { QStringLiteral("gasstorage"), QStringLiteral("RetailAndCommercial")},
+               { QStringLiteral("furniturestore"), QStringLiteral("RetailAndCommercial")}, { QStringLiteral("furniturestorage"), QStringLiteral("RetailAndCommercial")},
+               { QStringLiteral("gigamart"), QStringLiteral("RetailAndCommercial")}, { QStringLiteral("grocers"), QStringLiteral("RetailAndCommercial")},
+               { QStringLiteral("fossoil"), QStringLiteral("RetailAndCommercial")}, { QStringLiteral("aesthetic"), QStringLiteral("RetailAndCommercial")},
+               { QStringLiteral("storage"), QStringLiteral("RetailAndCommercial")}, { QStringLiteral("grocery"), QStringLiteral("RetailAndCommercial")},
+               { QStringLiteral("library"), QStringLiteral("RetailAndCommercial")}, { QStringLiteral("liquorstore"), QStringLiteral("RetailAndCommercial")},
+               { QStringLiteral("changeroom"), QStringLiteral("RetailAndCommercial")},
+               // Medical
+               { QStringLiteral("medical"), QStringLiteral("Medical")}, { QStringLiteral("pharmacy"), QStringLiteral("Medical")}, { QStringLiteral("optometrist"), QStringLiteral("Medical")},
+               { QStringLiteral("laboratory"), QStringLiteral("Medical")}, { QStringLiteral("hospital"), QStringLiteral("Medical")}, { QStringLiteral("dentist"), QStringLiteral("Medical")},
+               { QStringLiteral("clinic"), QStringLiteral("Medical")},
+               // Community Services
+               { QStringLiteral("police"), QStringLiteral("CommunityServices")}, { QStringLiteral("security"), QStringLiteral("CommunityServices")},
+               { QStringLiteral("church"), QStringLiteral("CommunityServices")}, { QStringLiteral("firestorage"), QStringLiteral("CommunityServices")},
+               { QStringLiteral("armystorage"), QStringLiteral("CommunityServices")}, { QStringLiteral("armysurplus"), QStringLiteral("CommunityServices")},
+               { QStringLiteral("gunstore"), QStringLiteral("CommunityServices")}, { QStringLiteral("post"), QStringLiteral("CommunityServices")},
+               { QStringLiteral("theatre"), QStringLiteral("CommunityServices")}, { QStringLiteral("school"), QStringLiteral("CommunityServices")},
+               { QStringLiteral("bank"), QStringLiteral("CommunityServices")},
+               // Hospitality
+               { QStringLiteral("motel"), QStringLiteral("Hospitality")},
+               // Industrial
+               { QStringLiteral("shed"), QStringLiteral("Industrial")}, { QStringLiteral("storageunit"), QStringLiteral("Industrial")}, { QStringLiteral("garage"), QStringLiteral("Industrial")},
+               { QStringLiteral("mechanic"), QStringLiteral("Industrial")}, { QStringLiteral("Foundry"), QStringLiteral("Industrial")}, { QStringLiteral("barn"), QStringLiteral("Industrial")},
+               { QStringLiteral("construction"), QStringLiteral("Industrial")}, { QStringLiteral("railroad"), QStringLiteral("Industrial") }
+    };
+
+    foreach (const MapObject* mapObject, objectGroup->objects()) {
         if (!mapObject->width() || !mapObject->height())
             continue;
 
@@ -336,305 +382,14 @@ bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, ObjectGro
         int w = qCeil(mapObject->x() + mapObject->width()) - x;
         int h = qCeil(mapObject->y() + mapObject->height()) - y;
 
-        QString name = mapObject->name();
-        if (name.isEmpty())
-            name = QLatin1String("unnamed");
+        QString name = mapObject->name().isEmpty() ? QLatin1String("unnamed") : mapObject->name();
+        QString objectType = objectTypeMap.value(name, QStringLiteral("Residential"));
 
         if (objectGroup->map()->orientation() == Map::Isometric) {
             x += 3 * level;
             y += 3 * level;
         }
-        QString objectType = QStringLiteral("yes");
-        if (name == QStringLiteral("restaurant"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("spiffo_dining"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("spiffoskitchen"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("bakery"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("dinerkitchen"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("cafe"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("sushidining"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("sushikitchen"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("knoxbutcher"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("spiffosstorage"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("tacokitchen"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("fishchipskitchen"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("jayschicken_kitchen"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("chinesekitchen"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("burger"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("mexican"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("kitchen_crepe"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("jayschicken"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("icecream"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("donut"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("deepfry"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("bowlingalley"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("bowllingalley"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("fitness"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("gym"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("italian"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("western"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("pizza"))
-        {
-            objectType = QStringLiteral("RestaurantsAndEntertainment");
-        }
-        else if (name == QStringLiteral("zippeestore"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("zippeestorage"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("gasstore"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("gasstorage"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("furniturestore"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("furniturestorage"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("gigamart"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("grocers"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("fossoil"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("aesthetic"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("storage"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("grocery"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("library"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("liquorstore"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("changeroom"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("grocery"))
-        {
-            objectType = QStringLiteral("RetailAndCommercial");
-        }
-        else if (name == QStringLiteral("medical"))
-        {
-            objectType = QStringLiteral("Medical");
-        }
-        else if (name == QStringLiteral("pharmacy"))
-        {
-            objectType = QStringLiteral("Medical");
-        }
-        else if (name == QStringLiteral("optometrist"))
-        {
-            objectType = QStringLiteral("Medical");
-        }
-        else if (name == QStringLiteral("laboratory"))
-        {
-            objectType = QStringLiteral("Medical");
-        }
-        else if (name == QStringLiteral("hospital"))
-        {
-            objectType = QStringLiteral("Medical");
-        }
-        else if (name == QStringLiteral("dentist"))
-        {
-            objectType = QStringLiteral("Medical");
-        }
-        else if (name == QStringLiteral("clinic"))
-        {
-            objectType = QStringLiteral("Medical");
-        }
-        else if (name == QStringLiteral("police"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("security"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("church"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("firestorage"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("armystorage"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("armysurplus"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("gunstore"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("post"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("theatre"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("school"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("bank"))
-        {
-            objectType = QStringLiteral("CommunityServices");
-        }
-        else if (name == QStringLiteral("motel"))
-        {
-            objectType = QStringLiteral("Hospitality");
-        }
-        else if (name == QStringLiteral("shed"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else if (name == QStringLiteral("storageunit"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else if (name == QStringLiteral("garage"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else if (name == QStringLiteral("mechanic"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else if (name == QStringLiteral("Foundry"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else if (name == QStringLiteral("barn"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else if (name == QStringLiteral("construction"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else if (name == QStringLiteral("railroad"))
-        {
-            objectType = QStringLiteral("Industrial");
-        }
-        else
-        {
-            objectType = QStringLiteral("Residential");
-        }
 
-        // Apply the MapComposite offset in the top-level map.
         x += offset.x();
         y += offset.y();
 
@@ -654,16 +409,12 @@ bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, ObjectGro
             property.mValue = objectType;
             feature->properties() += property;
 
-
-
             feature->mGeometry.mType = QStringLiteral("Polygon");
             InGameMapCoordinates coords;
-
             coords += InGameMapPoint(x, y);
             coords += InGameMapPoint(x + w, y);
-            coords += InGameMapPoint( x + w, y + h);
-            coords += InGameMapPoint( x, y + h);
-
+            coords += InGameMapPoint(x + w, y + h);
+            coords += InGameMapPoint(x, y + h);
             feature->mGeometry.mCoordinates += coords;
 
             mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
@@ -671,6 +422,7 @@ bool InGameMapFeatureGenerator::processObjectGroupNew(WorldCell* cell, ObjectGro
     }
     return true;
 }
+
 
 namespace {
 
@@ -860,7 +612,7 @@ public:
                 OutlineCellPtr cell = get(x, y);
                 // every poly must have a nw corner.
                 // this should only happen once.
-                if (cell && cell->n && cell->w && cell->inner && !(cell->tw | cell->tn | cell->te | cell->ts)) {
+                if (cell && cell->n && cell->w && cell->inner && !(cell->tw || cell->tn || cell->te || cell->ts)) {
                     QPolygon nodes = trace(*cell);
                     if (nodes.isEmpty())
                         continue;
@@ -873,16 +625,13 @@ public:
 
 } // namespace
 
-
 bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, ObjectGroup *objectGroup, int levelOffset, const QPoint &offset)
 {
     if (objectGroup->name().contains(QLatin1String("RoomDefs")) == false) {
         return true;
     }
 
-    int level;
-    if (!MapComposite::levelForLayer(objectGroup, &level))
-        return true;
+    int level = objectGroup->level();
     level += levelOffset;
 
     if (level != 0)
@@ -898,6 +647,10 @@ bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, ObjectGroup 
 #endif
         if (mapObject->width() * mapObject->height() <= 0)
             continue;
+
+        if ((level <= 0) && BuildingEditor::RoofHiding::isEmptyOutside(mapObject->name())) {
+            continue;
+        }
 
         int x = qFloor(mapObject->x());
         int y = qFloor(mapObject->y());
@@ -961,30 +714,31 @@ bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, ObjectGroup 
     return true;
 }
 
-bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, MapInfo *mapInfo, ObjectGroup *objectGroup, int levelOffset, const QPoint &offset)
+bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, MapInfo *mapInfo, ObjectGroup *objectGroup, int levelOffset,
+                                                   const QPoint &offset, QRect &bounds, QVector<QRect> &rects)
 {
     if (objectGroup->name().contains(QLatin1String("RoomDefs")) == false) {
         return true;
     }
 
-    int level;
-    if (!MapComposite::levelForLayer(objectGroup, &level))
-        return true;
+    int level = objectGroup->level();
     level += levelOffset;
 
-    if (level != 0)
+    if (level < 0) {
         return true;
+    }
 
-    QRect bounds;
-    QVector<QRect> rects;
-
-    foreach (const MapObject *mapObject, objectGroup->objects()) {
+    for (const MapObject *mapObject : objectGroup->objects()) {
 #if 0
         if (mapObject->name().isEmpty() || mapObject->type().isEmpty())
             continue;
 #endif
         if (mapObject->width() * mapObject->height() <= 0)
             continue;
+
+        if ((level <= 0) && BuildingEditor::RoofHiding::isEmptyOutside(mapObject->name())) {
+            continue;
+        }
 
         int x = qFloor(mapObject->x());
         int y = qFloor(mapObject->y());
@@ -1014,9 +768,96 @@ bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, MapInfo *map
         rects += { x, y, w, h };
     }
 
+    return true;
+}
+
+bool InGameMapFeatureGenerator::traceBuildingOutline(WorldCell *cell, MapInfo *mapInfo, QRect &bounds, QVector<QRect> &rects)
+{
     if (bounds.isEmpty())
         return true;
+#if 1
+    ClipperLib::Clipper clipper;
+    ClipperLib::Path path;
 
+    for (const QRect box : rects) {
+        path.clear();
+        path << ClipperLib::IntPoint(box.left(), box.top());
+        path << ClipperLib::IntPoint(box.right() + 1, box.top());
+        path << ClipperLib::IntPoint(box.right() + 1, box.bottom() + 1);
+        path << ClipperLib::IntPoint(box.left(), box.bottom() + 1);
+        clipper.AddPath(path, ClipperLib::ptSubject, true);
+    }
+
+    ClipperLib::PolyTree polyTree;
+    if (clipper.Execute(ClipperLib::ctDifference, polyTree, ClipperLib::PolyFillType::pftPositive) == false) {
+        return true;
+    }
+
+    std::map<ClipperLib::PolyNode*,pzPolygon*> polyMap;
+    std::vector<pzPolygon*> allPolygons;
+    for (ClipperLib::PolyNode* node = polyTree.GetFirst(); node != nullptr; node = node->GetNext()) {
+        if (node->IsHole()) {
+            pzPolygon *outer = polyMap[node->Parent];
+            outer->inner.push_back(node->Contour);
+        } else {
+            pzPolygon* poly = new pzPolygon();
+            poly->outer = node->Contour;
+            polyMap[node] = poly;
+            allPolygons.push_back(poly);
+        }
+    }
+
+    // FIXME: This may create multiple features each with an outer and zero or more holes.
+    //        It would be better if a single feature per building was created.
+    for (pzPolygon *poly : allPolygons) {
+        ClipperLib::Path path = poly->outer;
+        if (path.size() < 3) {
+            continue;
+        }
+
+        InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
+        InGameMapProperty property;
+        property.mKey = QStringLiteral("building");
+        QString LEGEND = QStringLiteral("Legend");
+        if (mapInfo->map()->properties().contains(LEGEND)) {
+            property.mValue = mapInfo->map()->property(LEGEND);
+        } else {
+            property.mValue = QStringLiteral("yes");
+        }
+        feature->properties() += property;
+        for (auto it = mapInfo->map()->properties().cbegin(); it != mapInfo->map()->properties().cend(); it++) {
+            if (it.key() == LEGEND) {
+                continue;
+            }
+            property.mKey = it.key();
+            property.mValue = it.value();
+            feature->properties() += property;
+        }
+        feature->mGeometry.mType = QStringLiteral("Polygon");
+        InGameMapCoordinates coords;
+        for (auto& point : path) {
+            coords += InGameMapPoint(point.X, point.Y);
+        }
+        feature->mGeometry.mCoordinates += coords;
+
+        if (poly->inner.empty() == false) {
+            for (auto& hole : poly->inner) {
+                if (hole.size() < 3) {
+                    continue;
+                }
+                coords.clear();
+                for (auto& point : hole) {
+                    coords += InGameMapPoint(point.X, point.Y);
+                }
+                feature->mGeometry.mCoordinates += coords;
+            }
+        }
+
+        mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
+    }
+
+    qDeleteAll(allPolygons);
+#else
     OutlineGrid grid;
     grid.setSize(bounds.width(), bounds.height());
     for (auto& rect : rects) {
@@ -1061,7 +902,7 @@ bool InGameMapFeatureGenerator::processObjectGroup(WorldCell *cell, MapInfo *map
 
         mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
     });
-
+#endif
     return true;
 }
 
@@ -1570,7 +1411,7 @@ static void simplifyPolygonRoad(ClipperLib::Path& nodes, int simple, int minPoin
 
     double simplification = 2 * SCALE;
     //simplification = SCALE;
-    
+
     douglas_peucker(points, 0, points.size(), simplification, 2, 0);
 
     nodes.clear();
@@ -1966,7 +1807,7 @@ bool InGameMapFeatureGenerator::doRoadTertiary(WorldCell* cell, MapInfo* mapInfo
 }
 
 bool InGameMapFeatureGenerator::doRoadTrail(WorldCell* cell, MapInfo* mapInfo)
-{   
+{
     auto& features = cell->inGameMap().features();
     for (int i = features.size() - 1; i >= 0; i--) {
         auto* feature = features[i];
@@ -2061,7 +1902,7 @@ bool InGameMapFeatureGenerator::doRoadTrail(WorldCell* cell, MapInfo* mapInfo)
             InGameMapFeature* feature = new InGameMapFeature(&cell->inGameMap());
             feature->properties().set(QStringLiteral("highway"), QStringLiteral("trail"));
             ClipperLib::Path simple = poly->outer;
-            
+
             simplifyPolygonRoad(simple, threshold, size);
             if (simple.size() < 4) continue;
             feature->mGeometry.mType = QStringLiteral("Polygon");
@@ -2083,7 +1924,7 @@ bool InGameMapFeatureGenerator::doRoadTrail(WorldCell* cell, MapInfo* mapInfo)
                     feature->mGeometry.mCoordinates += coords;
                 }
             }
-          
+
 
             mWorldDoc->addInGameMapFeature(cell, cell->inGameMap().features().size(), feature);
 

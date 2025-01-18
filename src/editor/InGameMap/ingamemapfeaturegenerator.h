@@ -32,6 +32,7 @@ namespace Tiled {
 class ObjectGroup;
 }
 
+
 class InGameMapFeatureGenerator : public QObject
 {
     Q_OBJECT
@@ -45,6 +46,17 @@ public:
         FeatureTree,
         FeatureWater,
         FeatureRoad
+    };
+    struct GenerateCellFailure
+    {
+        WorldCell* cell;
+        QString error;
+
+        GenerateCellFailure(WorldCell* cell, const QString& error)
+            : cell(cell)
+            , error(error)
+        {
+        }
     };
 
     explicit InGameMapFeatureGenerator(QObject *parent = nullptr);
@@ -60,13 +72,13 @@ private:
     bool processObjectGroups(WorldCell *cell, MapComposite *mapComposite);
     bool processObjectGroupsNew(WorldCell* cell, MapComposite* mapComposite);
 
-    bool processObjectGroupNew(WorldCell* cell, Tiled::ObjectGroup* objectGroup, int levelOffset, const QPoint& offset);
     bool processObjectGroup(WorldCell *cell, Tiled::ObjectGroup *objectGroup, int levelOffset, const QPoint &offset);
+    bool processObjectGroupNew(WorldCell* cell, Tiled::ObjectGroup* objectGroup, int levelOffset, const QPoint& offset);
 
-    
-    bool processObjectGroup(WorldCell *cell, MapInfo *mapInfo, Tiled::ObjectGroup *objectGroup, int levelOffset, const QPoint &offset);
-    bool processObjectGroupNew(WorldCell* cell, MapInfo* mapInfo, Tiled::ObjectGroup* objectGroup, int levelOffset, const QPoint& offset);
+    bool processObjectGroup(WorldCell *cell, MapInfo *mapInfo, Tiled::ObjectGroup *objectGroup, int levelOffset, const QPoint &offset, QRect &bounds, QVector<QRect> &rects);
+    bool processObjectGroupNew(WorldCell* cell, MapInfo* mapInfo, Tiled::ObjectGroup* objectGroup, int levelOffset, const QPoint& offset, QRect &bounds, QVector<QRect> &rects);
 
+    bool traceBuildingOutline(WorldCell *cell, MapInfo *mapInfo, QRect &bounds, QVector<QRect> &rects);
     bool isInvalidBuildingPolygon(const QPolygon &poly);
     bool doWater(WorldCell* cell, MapInfo* mapInfo);
     bool doTrees(WorldCell* cell, MapInfo *mapInfo);
@@ -80,12 +92,11 @@ private:
     bool doRoadTrail(WorldCell* cell, MapInfo* mapInfo);
 
     bool doRailroad(WorldCell* cell, MapInfo* mapInfo);
-
-
 private:
     WorldDocument *mWorldDoc;
     QString mError;
     FeatureType mFeatureType;
+    QList<GenerateCellFailure> mFailures;
 };
 
 #endif // INGAMEMAP_FEATURE_GENERATOR_H
