@@ -31,8 +31,6 @@ class WorldObjectGroup;
 class ObjectType;
 class WorldCell;
 
-#define MAX_WORLD_LEVELS 8
-
 class ObjectGroupList : public QList<WorldObjectGroup*>
 {
 public:
@@ -124,13 +122,15 @@ public:
     QString zombieSpawnMap;
     QString tileDefFolder;
     QPoint worldOrigin;
+    int numberOfThreads = 1;
 
     bool operator == (const GenerateLotsSettings &other)
     {
         return exportDir == other.exportDir &&
                 zombieSpawnMap == other.zombieSpawnMap &&
                 tileDefFolder == other.tileDefFolder &&
-                worldOrigin == other.worldOrigin;
+                worldOrigin == other.worldOrigin &&
+                numberOfThreads == other.numberOfThreads;
     }
 
     bool operator != (const GenerateLotsSettings &other)
@@ -142,11 +142,13 @@ class LuaSettings
 public:
     QString spawnPointsFile;
     QString worldObjectsFile;
+    QString roomTonesFile;
 
     bool operator == (const LuaSettings &other)
     {
         return spawnPointsFile == other.spawnPointsFile &&
-                worldObjectsFile == other.worldObjectsFile;
+                worldObjectsFile == other.worldObjectsFile &&
+                roomTonesFile == other.roomTonesFile;
     }
 
     bool operator != (const LuaSettings &other)

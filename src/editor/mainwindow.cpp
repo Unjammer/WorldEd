@@ -34,7 +34,9 @@
 #include "lootwindow.h"
 #include "lotsdock.h"
 #include "lotfilesmanager.h"
+#include "lotfilesmanager256.h"
 #include "lotpackwindow.h"
+#include "luawriter.h"
 #include "mapcomposite.h"
 #include "mapimagemanager.h"
 #include "mapmanager.h"
@@ -44,6 +46,7 @@
 #include "objectgroupsdialog.h"
 #include "objecttypesdialog.h"
 #include "pngbuildingdialog.h"
+#include "pngzonesdialog.h"
 #include "preferences.h"
 #include "preferencesdialog.h"
 #include "progress.h"
@@ -68,12 +71,15 @@
 #include "worldscene.h"
 #include "worldview.h"
 #include "worldwriter.h"
+#include "writeroomtonesdialog.h"
 #include "writespawnpointsdialog.h"
 #include "writeworldobjectsdialog.h"
 #include "zoomable.h"
+#include "biomemapgeneratorDialog.h"
 
 #include "InGameMap/ingamemapfeaturegenerator.h"
 #include "InGameMap/ingamemapdock.h"
+#include "InGameMap/ingamemapimagedialog.h"
 #include "InGameMap/ingamemapimagepyramidwindow.h"
 #include "InGameMap/ingamemapreader.h"
 #include "InGameMap/ingamemapscene.h"
@@ -85,6 +91,8 @@
 #include "maprenderer.h"
 #include "objectgroup.h"
 #include "tileset.h"
+
+#include "logger.h"
 
 #include <QtCore/qmath.h>
 #include <QBuffer>
@@ -99,7 +107,6 @@
 #include <QScrollBar>
 #include <QUndoGroup>
 #include <QUndoStack>
-#include <qelapsedtimer.h>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -121,21 +128,18 @@ MainWindow::MainWindow(QWidget *parent)
     , mPropertiesDock(new PropertiesDock(this))
     , mSearchDock(new SearchDock(this))
     , mInGameMapDock(new InGameMapDock(this))
-#ifdef ROAD_UI
     , mRoadsDock(new RoadsDock(this))
-#endif
     , mCurrentDocument(0)
     , mCurrentLevelMenu(new QMenu(this))
     , mObjectGroupMenu(new QMenu(this))
     , mZoomable(0)
     , mLotPackWindow(0)
+    , mSettings(QDir::currentPath() + QLatin1String("/settings.ini"), QSettings::IniFormat)
 {
+    Logger::instance().log(tr("MainWindow - Loading : %1").arg(mSettings.fileName()), QLatin1String("INFO"));
     ui->setupUi(this);
 
     mInstance = this;
-
-
-
 
     Preferences *prefs = Preferences::instance();
 
@@ -158,9 +162,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionCopy->setShortcuts(QKeySequence::Copy);
     ui->actionPaste->setShortcuts(QKeySequence::Paste);
 
+    ui->actionShowCellBorder->setChecked(prefs->showCellBorder());
     ui->actionSnapToGrid->setChecked(prefs->snapToGrid());
     ui->actionShowCoordinates->setChecked(prefs->showCoordinates());
     ui->actionShowGrid->setChecked(prefs->showWorldGrid());
+    ui->actionShowInvisibleTiles->setChecked(prefs->showInvisibleTiles());
     ui->actionShowMiniMap->setChecked(prefs->showMiniMap());
     ui->actionShowObjects->setChecked(prefs->showObjects());
     ui->actionShowObjectNames->setChecked(prefs->showObjectNames());
@@ -168,7 +174,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionShowOtherWorlds->setChecked(prefs->showOtherWorlds());
     ui->actionShowZombieSpawnImage->setChecked(prefs->showZombieSpawnImage());
     ui->actionShowZonesInWorldView->setChecked(prefs->showZonesInWorldView());
-    ui->actionShowZonesWorldInWorldView->setChecked(prefs->showZonesWorldInWorldView());
     ui->actionHighlightCurrentLevel->setChecked(prefs->highlightCurrentLevel());
     ui->actionHighlightRoomUnderPointer->setChecked(prefs->highlightRoomUnderPointer());
 
@@ -224,17 +229,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->menuView->addAction(mObjectsDock->toggleViewAction());
     ui->menuView->addAction(mPropertiesDock->toggleViewAction());
     ui->menuView->addAction(mSearchDock->toggleViewAction());
-#ifdef ROAD_UI
+//#ifdef ROAD_UI
     ui->menuView->addAction(mRoadsDock->toggleViewAction());
-#endif
+//#endif
 
     addDockWidget(Qt::LeftDockWidgetArea, mInGameMapDock);
     addDockWidget(Qt::LeftDockWidgetArea, mLotsDock);
     addDockWidget(Qt::LeftDockWidgetArea, mObjectsDock);
     addDockWidget(Qt::LeftDockWidgetArea, mSearchDock);
-#ifdef ROAD_UI
+//#ifdef ROAD_UI
     addDockWidget(Qt::LeftDockWidgetArea, mRoadsDock);
-#endif
+//#endif
     addDockWidget(Qt::RightDockWidgetArea, mPropertiesDock);
     addDockWidget(Qt::RightDockWidgetArea, mLayersDock);
     addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
@@ -257,6 +262,12 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::generateLotsAll);
     connect(ui->actionGenerateLotsSelected, &QAction::triggered,
             this, &MainWindow::generateLotsSelected);
+    connect(ui->actionGenerateLotsAll8x8, &QAction::triggered,
+            this, &MainWindow::generateLotsAll8x8);
+    connect(ui->actionGenerateLotsSelected8x8, &QAction::triggered,
+            this, &MainWindow::generateLotsSelected8x8);
+    connect(ui->actionOverwriteSpawnMap_AllCells_256, &QAction::triggered, this, &MainWindow::overwriteSpawnMap_AllCells_256);
+    connect(ui->actionOverwriteSpawnMap_SelectedCells_256, &QAction::triggered, this, &MainWindow::overwriteSpawnMap_SelectedCells_256);
     connect(ui->actionBMPToTMXAll, &QAction::triggered,
             this, &MainWindow::BMPToTMXAll);
     connect(ui->actionBMPToTMXSelected, &QAction::triggered,
@@ -267,11 +278,13 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::TMXToBMPSelected);
     connect(ui->actionLUAObjectDump, &QAction::triggered, this, &MainWindow::WriteSpawnPoints);
     connect(ui->actionWriteObjects, &QAction::triggered, this, &MainWindow::WriteWorldObjects);
+    connect(ui->actionWriteRoomTonesToLua, &QAction::triggered, this, &MainWindow::WriteRoomTones);
     connect(ui->actionFromToAll, &QAction::triggered,
             this, &MainWindow::FromToAll);
     connect(ui->actionFromToSelected, &QAction::triggered,
             this, &MainWindow::FromToSelected);
     connect(ui->actionBuildingsToPNG, &QAction::triggered, this, &MainWindow::BuildingsToPNG);
+    connect(ui->actionZonesToPNG, &QAction::triggered, this, &MainWindow::ZonesToPNG);
     connect(ui->actionQuit, &QAction::triggered, this, &QWidget::close);
 
     connect(ui->actionCopy, &QAction::triggered, this, &MainWindow::copy);
@@ -286,11 +299,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionEnums, &QAction::triggered, this, &MainWindow::propertyEnumsDialog);
     connect(ui->actionProperties, &QAction::triggered, this, &MainWindow::properyDefinitionsDialog);
     connect(ui->actionTemplates, &QAction::triggered, this, &MainWindow::templatesDialog);
-#ifdef ROAD_UI
+//#ifdef ROAD_UI
     connect(ui->actionRemoveRoad, SIGNAL(triggered()), SLOT(removeRoad()));
-
-    ui->actionRemoveRoad->setVisible(true);
-#endif
+//#else
+//    ui->actionRemoveRoad->setVisible(false);
+//#endif
     connect(ui->actionRemoveBMP, &QAction::triggered, this, &MainWindow::removeBMP);
 
     connect(ui->actionRemoveLot, &QAction::triggered, this, &MainWindow::removeLot);
@@ -312,12 +325,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionAddInGameMapHole, &QAction::triggered, this, &MainWindow::addInGameMapHole);
     connect(ui->actionRemoveInGameMapHole, &QAction::triggered, this, &MainWindow::removeInGameMapHole);
     connect(ui->actionReadInGameMapFeaturesXML, &QAction::triggered, this, &MainWindow::readInGameMapFeaturesXML);
-    connect(ui->actionWriteInGameMapFeaturesXML, &QAction::triggered, this, &MainWindow::writeInGameMapFeaturesXML);
-
+    connect(ui->actionWriteInGameMapFeaturesXML, &QAction::triggered, this, &MainWindow::writeInGameMapFeaturesXML_300);
+    connect(ui->actionWriteInGameMapFeaturesXML_256, &QAction::triggered, this, &MainWindow::writeInGameMapFeaturesXML_256);
     connect(ui->actionOverwriteInGameMapFeaturesXML, &QAction::triggered, this, &MainWindow::overwriteInGameMapFeaturesXML);
-
+    connect(ui->actionOverwriteInGameMapFeaturesXML_256, &QAction::triggered, this, &MainWindow::overwriteInGameMapFeaturesXML_256);
+    connect(ui->actionCreateWorldImage, &QAction::triggered, this, &MainWindow::createInGameMapImage);
     connect(ui->actionCreateImagePyramid, &QAction::triggered, this, &MainWindow::creaeInGameMapImagePyramid);
 
+    connect(ui->actionShowCellBorder, &QAction::toggled, prefs, &Preferences::setShowCellBorder);
     connect(ui->actionSnapToGrid, &QAction::toggled, prefs, &Preferences::setSnapToGrid);
     connect(ui->actionShowCoordinates, &QAction::toggled, prefs, &Preferences::setShowCoordinates);
     connect(ui->actionShowGrid, &QAction::toggled, this, &MainWindow::setShowGrid);
@@ -328,7 +343,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionShowBMP, &QAction::toggled, prefs, &Preferences::setShowBMPs);
     connect(ui->actionShowZombieSpawnImage, &QAction::toggled, prefs, &Preferences::setShowZombieSpawnImage);
     connect(ui->actionShowZonesInWorldView, &QAction::toggled, prefs, &Preferences::setShowZonesInWorldView);
-    connect(ui->actionShowZonesWorldInWorldView, &QAction::toggled, prefs, &Preferences::setShowZonesWorldInWorldView);
     connect(ui->actionHighlightCurrentLevel, &QAction::toggled, prefs, &Preferences::setHighlightCurrentLevel);
     connect(ui->actionHighlightRoomUnderPointer, &QAction::toggled, prefs, &Preferences::setHighlightRoomUnderPointer);
     connect(ui->actionLevelAbove, &QAction::triggered, this, &MainWindow::selectLevelAbove);
@@ -336,10 +350,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionZoomIn, &QAction::triggered, this, &MainWindow::zoomIn);
     connect(ui->actionZoomOut, &QAction::triggered, this, &MainWindow::zoomOut);
     connect(ui->actionZoomNormal, &QAction::triggered, this, &MainWindow::zoomNormal);
+    connect(ui->actionShowInvisibleTiles, &QAction::toggled, prefs, &Preferences::setShowInvisibleTiles);
 
     connect(ui->actionLotPackViewer, &QAction::triggered, this, &MainWindow::lotpackviewer);
     connect(ui->actionLootInspector, &QAction::triggered, this, &MainWindow::lootInspector);
+    connect(ui->actionGenerate_BiomeMap, &QAction::triggered, this, &MainWindow::BiomeMapGenerator);
 //    connect(ui->actionReadOldWaterDotLua, &QAction::triggered, this, &MainWindow::readOldWaterDotLua);
+    connect(ui->actionAbout_WorldEd_Unofficial, &QAction::triggered, this, &MainWindow::showAboutDialog);
 
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
@@ -350,12 +367,11 @@ MainWindow::MainWindow(QWidget *parent)
     ToolManager *toolManager = ToolManager::instance();
     toolManager->registerTool(WorldCellTool::instance());
     toolManager->registerTool(PasteCellsTool::instance());
-#ifdef ROAD_UI
+//#ifdef ROAD_UI
     toolManager->registerTool(WorldSelectMoveRoadTool::instance());
     toolManager->registerTool(WorldCreateRoadTool::instance());
     toolManager->registerTool(WorldEditRoadTool::instance());
-
-#endif
+//#endif
     toolManager->registerTool(WorldBMPTool::instance());
     toolManager->addSeparator();
     toolManager->registerTool(SubMapTool::instance());
@@ -377,12 +393,11 @@ MainWindow::MainWindow(QWidget *parent)
     toolManager->registerTool(SpawnPointTool::instancePtr());
     new RoomToneTool;
     toolManager->registerTool(RoomToneTool::instancePtr());
-#ifdef ROAD_UI
+//#ifdef ROAD_UI
     toolManager->registerTool(CellSelectMoveRoadTool::instance());
     toolManager->registerTool(CellCreateRoadTool::instance());
     toolManager->registerTool(CellEditRoadTool::instance());
-
-#endif
+//#endif
     new CreateInGameMapPointTool;
     new CreateInGameMapPolygonTool;
     new CreateInGameMapPolylineTool;
@@ -434,6 +449,7 @@ MainWindow::~MainWindow()
     // run, which causes MapManager to be *recreated* and recreate its threads.
     // I think this leads to the application not terminating promptly.
     ToolManager::instance()->toolBar()->setParent(0);
+    setWindowTitle(tr("PZWorldEd Unofficial Fork"));
 #else
     DocumentManager::deleteInstance();
     ToolManager::deleteInstance();
@@ -474,7 +490,7 @@ void MainWindow::changeEvent(QEvent *event)
 
 void MainWindow::retranslateUi()
 {
-    setWindowTitle(tr("PZWorldEd"));
+    setWindowTitle(tr("PZWorldEd Unofficial Fork (Build 20250116)"));
 }
 
 void MainWindow::newWorld()
@@ -717,7 +733,7 @@ void MainWindow::selectLevelAbove()
 {
     if (CellDocument *cellDoc = mCurrentDocument->asCellDocument()) {
         int level = cellDoc->currentLevel();
-        if (level < cellDoc->scene()->mapComposite()->maxLevel())
+        if (level < MAX_WORLD_LEVEL /*cellDoc->scene()->mapComposite()->maxLevel()*/)
             cellDoc->setCurrentLevel(level + 1);
     }
 }
@@ -726,7 +742,7 @@ void MainWindow::selectLevelBelow()
 {
     if (CellDocument *cellDoc = mCurrentDocument->asCellDocument()) {
         int level = cellDoc->currentLevel();
-        if (level > 0)
+        if (level > MIN_WORLD_LEVEL)
             cellDoc->setCurrentLevel(level - 1);
     }
 }
@@ -772,19 +788,12 @@ void MainWindow::openFile()
 
     Preferences::instance()->setOpenFileDirectory(QFileInfo(fileNames[0]).absolutePath());
 
-    int chrono = 0;
-    int fileCounter = fileNames.count();
     foreach (const QString &fileName, fileNames) {
-        QElapsedTimer timer;
-        timer.start();
-        //openFile(fileName/*, mapReader*/);
-        openFile(fileName, chrono);
-        chrono = (timer.elapsed() * 1000) * fileCounter;
-        fileCounter--;
+        openFile(fileName/*, mapReader*/);
     }
 }
 
-bool MainWindow::openFile(const QString &fileName, int chrono)
+bool MainWindow::openFile(const QString &fileName)
 {
     if (fileName.isEmpty())
         return false;
@@ -797,12 +806,7 @@ bool MainWindow::openFile(const QString &fileName, int chrono)
     }
 
     QFileInfo fileInfo(fileName);
-    if (chrono > 0) {
-        PROGRESS progress(tr("Reading %1 (estimated time to finish: %2 secs").arg(fileInfo.fileName()).arg(chrono));
-    }
-    else {
-        PROGRESS progress(tr("Reading %1").arg(fileInfo.fileName()));
-    }
+    PROGRESS progress(tr("Reading %1").arg(fileInfo.fileName()));
 
     WorldReader reader;
     World *world = reader.readWorld(fileName);
@@ -850,7 +854,7 @@ void MainWindow::openLastFiles()
 
         // This "recent file" could be a world or just a cell.
         // We require that the world be already open when editing a cell.
-        if (openFile(path, 0)) {
+        if (openFile(path)) {
             if (mSettings.contains(QLatin1String("cellX"))) {
                 int cellX = mSettings.value(QLatin1String("cellX")).toInt();
                 int cellY = mSettings.value(QLatin1String("cellY")).toInt();
@@ -913,12 +917,25 @@ bool MainWindow::InitConfigFiles()
                               tr("%1\n(while reading %2)")
                               .arg(TileMetaInfoMgr::instance()->errorString())
                               .arg(TileMetaInfoMgr::instance()->txtName()));
+
+        Logger::instance().log(
+            QStringLiteral("TileMetaInfoMgr - Critical Error: %1 (while reading %2)")
+                .arg(TileMetaInfoMgr::instance()->errorString())
+                .arg(TileMetaInfoMgr::instance()->txtName()),
+            QStringLiteral("CRITICAL")
+        );
         return false;
     }
 
     if (!TileMetaInfoMgr::instance()->addNewTilesets()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("%1\n(while adding new tilesets)"));
+
+        Logger::instance().log(
+            QStringLiteral("TileMetaInfoMgr - Critical Error: %1 (while adding new tilesets)"),
+            QStringLiteral("CRITICAL")
+        );
+
         return false;
     }
 
@@ -927,6 +944,14 @@ bool MainWindow::InitConfigFiles()
                               tr("Error while reading %1\n%2")
                               .arg(BuildingTMX::instance()->txtName())
                               .arg(BuildingTMX::instance()->errorString()));
+
+        Logger::instance().log(
+            QStringLiteral("BuildingTMX - Critical Error: %2 (while reading %1)")
+                .arg(BuildingTMX::instance()->txtName())
+                .arg(BuildingTMX::instance()->errorString()),
+            QStringLiteral("CRITICAL")
+        );
+
         return false;
     }
 
@@ -935,6 +960,14 @@ bool MainWindow::InitConfigFiles()
                               tr("Error while reading %1\n%2")
                               .arg(BuildingTilesMgr::instance()->txtName())
                               .arg(BuildingTilesMgr::instance()->errorString()));
+
+        Logger::instance().log(
+            QStringLiteral("BuildingTilesMgr - Critical Error: %2 (while reading %1)")
+                .arg(BuildingTilesMgr::instance()->txtName())
+                .arg(BuildingTilesMgr::instance()->errorString()),
+            QStringLiteral("CRITICAL")
+        );
+
         return false;
     }
 
@@ -943,6 +976,14 @@ bool MainWindow::InitConfigFiles()
                               tr("Error while reading %1\n%2")
                               .arg(FurnitureGroups::instance()->txtName())
                               .arg(FurnitureGroups::instance()->errorString()));
+
+        Logger::instance().log(
+            QStringLiteral("FurnitureGroups - Critical Error: %2 (while reading %1)")
+                .arg(FurnitureGroups::instance()->txtName())
+                .arg(FurnitureGroups::instance()->errorString()),
+            QStringLiteral("CRITICAL")
+        );
+
         return false;
     }
 
@@ -951,6 +992,14 @@ bool MainWindow::InitConfigFiles()
                               tr("Error while reading %1\n%2")
                               .arg(BuildingTemplates::instance()->txtName())
                               .arg(BuildingTemplates::instance()->errorString()));
+
+        Logger::instance().log(
+            QStringLiteral("BuildingTemplates - Critical Error: %2 (while reading %1)")
+                .arg(BuildingTemplates::instance()->txtName())
+                .arg(BuildingTemplates::instance()->errorString()),
+            QStringLiteral("CRITICAL")
+        );
+
         return false;
     }
 
@@ -1130,6 +1179,15 @@ void MainWindow::BuildingsToPNG()
     d.exec();
 }
 
+void MainWindow::ZonesToPNG()
+{
+    WorldDocument *worldDoc = mCurrentDocument->asWorldDocument();
+    if (!worldDoc)
+        worldDoc = mCurrentDocument->asCellDocument()->worldDocument();
+    PNGZonesDialog d(worldDoc->world(), this);
+    d.exec();
+}
+
 void MainWindow::lootInspector()
 {
     bool exists = LootWindow::hasInstance();
@@ -1146,6 +1204,16 @@ void MainWindow::lootInspector()
     }
 }
 
+void MainWindow::BiomeMapGenerator() {
+
+    WorldDocument *worldDoc = mCurrentDocument->asWorldDocument();
+    if (!worldDoc)
+        worldDoc = mCurrentDocument->asCellDocument()->worldDocument();
+    biomemapgeneratorDialog d(worldDoc->world(), this);
+    d.exec();
+
+}
+
 #include "waterflow.h"
 void MainWindow::readOldWaterDotLua()
 {
@@ -1158,7 +1226,6 @@ void MainWindow::readOldWaterDotLua()
 
 #include "mapwriter.h"
 #include <QScopedPointer>
-#include <qdom.h>
 void MainWindow::FromToAux(bool selectedOnly)
 {
     WorldDocument *worldDoc = mCurrentDocument->asWorldDocument();
@@ -1322,10 +1389,8 @@ void MainWindow::enableDeveloperFeatures()
 
     } else {
         ui->menuTools->menuAction()->setVisible(false);
-        ui->actionLotPackViewer->setVisible(false);
+//        ui->actionLotPackViewer->setVisible(false);
     }
-    ui->menuTools->menuAction()->setVisible(true);
-    ui->actionLotPackViewer->setVisible(true);
 }
 
 WorldDocument *MainWindow::currentWorldDocument()
@@ -1448,6 +1513,29 @@ void MainWindow::WriteWorldObjects()
     d.exec();
 }
 
+void MainWindow::WriteRoomTones()
+{
+    WorldDocument *worldDoc = mCurrentDocument->asWorldDocument();
+    if (CellDocument *cellDoc = mCurrentDocument->asCellDocument())
+        worldDoc = cellDoc->worldDocument();
+
+    WriteRoomTonesDialog d(worldDoc, this);
+    int result = d.exec();
+    if (result != QDialog::Accepted)
+        return;
+
+    QString luaFileName = worldDoc->world()->getLuaSettings().roomTonesFile;
+    if (!luaFileName.isEmpty()) {
+        LuaWriter writer;
+        if (!writer.writeRoomTones(worldDoc->world(), luaFileName)) {
+            QMessageBox::warning(MainWindow::instance(), tr("Error saving RoomTone objects"),
+                                 tr("An error occurred saving the LUA objects file.\n%1\n\n%2")
+                                 .arg(writer.errorString())
+                                 .arg(QDir::toNativeSeparators(luaFileName)));
+        }
+    }
+}
+
 void MainWindow::updateWindowTitle()
 {
     QString fileName = mCurrentDocument ? mCurrentDocument->fileName() : QString();
@@ -1456,7 +1544,7 @@ void MainWindow::updateWindowTitle()
     else {
         fileName = QDir::toNativeSeparators(fileName);
     }
-    setWindowTitle(tr("[*]%1 - PZWorldEd (Unofficial fork by Alree build:230311)").arg(fileName));
+    setWindowTitle(tr("[*]%1 - WorldEd Unofficial Fork (Build 20250116)").arg(fileName));
     setWindowFilePath(fileName);
     bool isModified = mCurrentDocument ? mCurrentDocument->isModified() : false;
     if (mCurrentDocument && mCurrentDocument->isCellDocument())
@@ -1494,6 +1582,34 @@ void MainWindow::generateLotsSelected()
     generateLots(this, mCurrentDocument, LotFilesManager::GenerateSelected);
 }
 
+static void generateLots8x8(MainWindow *mainWin, Document *doc, LotFilesManager256::GenerateMode mode)
+{
+    if (!doc)
+        return;
+    WorldDocument *worldDoc = doc->asWorldDocument();
+    if (!worldDoc)
+        return;
+    GenerateLotsDialog dialog(worldDoc, mainWin);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+    if (LotFilesManager256::instance()->generateWorld(worldDoc, mode) == false) {
+        QMessageBox::warning(mainWin, mainWin->tr("Lot Generation Failed!"), LotFilesManager256::instance()->errorString());
+    }
+#if 0
+    TileMetaInfoMgr::deleteInstance();
+#endif
+}
+
+void MainWindow::generateLotsAll8x8()
+{
+    generateLots8x8(this, mCurrentDocument, LotFilesManager256::GenerateAll);
+}
+
+void MainWindow::generateLotsSelected8x8()
+{
+    generateLots8x8(this, mCurrentDocument, LotFilesManager256::GenerateSelected);
+}
+
 void MainWindow::generateLotSettingsChanged()
 {
     // Update the tab names when worldOrigin changes.
@@ -1509,6 +1625,32 @@ void MainWindow::generateLotSettingsChanged()
     }
 
     updateActions();
+}
+
+static void overwriteSpawnMap256(MainWindow *mainWin, Document *doc, LotFilesManager256::GenerateMode mode)
+{
+    if (!doc)
+        return;
+    WorldDocument *worldDoc = doc->asWorldDocument();
+    if (!worldDoc)
+        return;
+    GenerateLotsDialog dialog(worldDoc, mainWin);
+    dialog.setWindowTitle(QLatin1String("Overwrite SpawnMap"));
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+    if (LotFilesManager256::instance()->overwriteSpawnMap(worldDoc, mode) == false) {
+        QMessageBox::warning(mainWin, mainWin->tr("Overwrite SpawnMap Failed!"), LotFilesManager256::instance()->errorString());
+    }
+}
+
+void MainWindow::overwriteSpawnMap_AllCells_256()
+{
+    overwriteSpawnMap256(this, mCurrentDocument, LotFilesManager256::GenerateAll);
+}
+
+void MainWindow::overwriteSpawnMap_SelectedCells_256()
+{
+    overwriteSpawnMap256(this, mCurrentDocument, LotFilesManager256::GenerateSelected);
 }
 
 static void _BMPToTMX(MainWindow *mainWin, Document *doc,
@@ -2341,7 +2483,6 @@ void MainWindow::readInGameMapFeaturesXML()
         ToolManager::instance()->selectTool(EditInGameMapFeatureTool::instancePtr());
     }
 
-    //TIM BAKER ADDITION 07032023
     updateActions();
 }
 
@@ -2368,27 +2509,6 @@ void MainWindow::clearCells()
     undoStack->endMacro();
 }
 
-//TIM BAKER ADDITION 07032023
-void MainWindow::overwriteInGameMapFeaturesXML()
-{
-    WorldDocument* worldDoc = currentWorldDocument();
-
-    PROGRESS progress(QStringLiteral("Writing InGameMap XML"), this);
-
-    InGameMapWriter writer;
-    QString fileName = Preferences::instance()->worldMapXMLFile();
-    if (!writer.writeWorld(worldDoc->world(), fileName)) {
-        qWarning("Failed to write InGameMap XML.");
-        return;
-    }
-
-    InGameMapWriterBinary writerBinary;
-    if (!writerBinary.writeWorld(worldDoc->world(), fileName + QStringLiteral(".bin"))) {
-        qWarning("Failed to write InGameMap Binary.");
-        return;
-    }
-}
-
 void MainWindow::clearMapOnly()
 {
     Q_ASSERT(mCurrentDocument);
@@ -2412,46 +2532,66 @@ void MainWindow::clearMapOnly()
     undoStack->endMacro();
 }
 
-void MainWindow::writeInGameMapFeaturesXML()
+void MainWindow::writeInGameMapFeaturesXML_300()
+{
+    writeInGameMapFeaturesXML(false);
+}
+
+void MainWindow::writeInGameMapFeaturesXML_256()
+{
+    writeInGameMapFeaturesXML(true);
+}
+
+void MainWindow::overwriteInGameMapFeaturesXML_300()
+{
+    overwriteInGameMapFeaturesXML(false);
+}
+
+void MainWindow::overwriteInGameMapFeaturesXML_256()
+{
+    overwriteInGameMapFeaturesXML(true);
+}
+
+void MainWindow::writeInGameMapFeaturesXML(bool b256)
 {
     WorldDocument *worldDoc = currentWorldDocument();
 
     QString suggestedFileName = Preferences::instance()->worldMapXMLFile();
 
-    bool forest = false;
-    for (int y = 0; y < worldDoc->world()->height(); y++) {
-        for (int x = 0; x < worldDoc->world()->width(); x++) {
-            WorldCell* cell = worldDoc->world()->cellAt(x, y);
-            for (auto* feature : qAsConst(cell->inGameMap().mFeatures)) {
-                for (auto& property : feature->mProperties) {
-                    if (property.mKey == QLatin1String("natural")) forest = true;
+        bool forest = false;
+        for (int y = 0; y < worldDoc->world()->height(); y++) {
+            for (int x = 0; x < worldDoc->world()->width(); x++) {
+                WorldCell* cell = worldDoc->world()->cellAt(x, y);
+                for (auto* feature : qAsConst(cell->inGameMap().mFeatures)) {
+                    for (auto& property : feature->mProperties) {
+                        if (property.mKey == QLatin1String("natural")) forest = true;
+                    }
                 }
             }
         }
-    }
 
 
-    //if (suggestedFileName.isEmpty() || !QFileInfo::exists(suggestedFileName)) {
-        if (worldDoc->fileName().isEmpty()) {
-            suggestedFileName = QDir::currentPath();
-            if (forest) {
-                suggestedFileName += QLatin1String("/worldmap-forest.xml");
+        //if (suggestedFileName.isEmpty() || !QFileInfo::exists(suggestedFileName)) {
+            if (worldDoc->fileName().isEmpty()) {
+                suggestedFileName = QDir::currentPath();
+                if (forest) {
+                    suggestedFileName += QLatin1String("/worldmap-forest.xml");
+                }
+                else {
+                    suggestedFileName += QLatin1String("/worldmap.xml");
+                }
+
+            } else {
+                const QFileInfo fileInfo(worldDoc->fileName());
+                suggestedFileName = fileInfo.path();
+                if (forest) {
+                    suggestedFileName += QLatin1String("/worldmap-forest.xml");
+                }
+                else {
+                    suggestedFileName += QLatin1String("/worldmap.xml");
+                }
             }
-            else {
-                suggestedFileName += QLatin1String("/worldmap.xml");
-            }
-            
-        } else {
-            const QFileInfo fileInfo(worldDoc->fileName());
-            suggestedFileName = fileInfo.path();
-            if (forest) {
-                suggestedFileName += QLatin1String("/worldmap-forest.xml");
-            }
-            else {
-                suggestedFileName += QLatin1String("/worldmap.xml");
-            }
-        }
-    //}
+        //}
 
     const QString fileName = QFileDialog::getSaveFileName(this, QString(), suggestedFileName, tr("XML files (*.xml)"));
     if (fileName.isEmpty()) {
@@ -2467,14 +2607,38 @@ void MainWindow::writeInGameMapFeaturesXML()
         qWarning("Failed to write InGameMap XML.");
         return;
     }
-    else {
 
-        InGameMapWriterBinary writerBinary;
-        if (!writerBinary.writeWorld(worldDoc->world(), fileName + QStringLiteral(".bin"))) {
-            qWarning("Failed to write InGameMap Binary.");
-            return;
-        }
+    InGameMapWriterBinary writerBinary;
+    if (!writerBinary.writeWorld(worldDoc->world(), fileName + QStringLiteral(".bin"), b256)) {
+        qWarning("Failed to write InGameMap Binary.");
+        return;
     }
+}
+
+void MainWindow::overwriteInGameMapFeaturesXML(bool b256)
+{
+    WorldDocument *worldDoc = currentWorldDocument();
+
+    PROGRESS progress(QStringLiteral("Writing InGameMap XML"), this);
+
+    InGameMapWriter writer;
+    QString fileName = Preferences::instance()->worldMapXMLFile();
+    if (!writer.writeWorld(worldDoc->world(), fileName)) {
+        qWarning("Failed to write InGameMap XML.");
+        return;
+    }
+
+    InGameMapWriterBinary writerBinary;
+    if (!writerBinary.writeWorld(worldDoc->world(), fileName + QStringLiteral(".bin"), b256)) {
+        qWarning("Failed to write InGameMap Binary.");
+        return;
+    }
+}
+
+void MainWindow::createInGameMapImage()
+{
+    InGameMapImageDialog dialog(this);
+    dialog.exec();
 }
 
 void MainWindow::creaeInGameMapImagePyramid()
@@ -2611,19 +2775,26 @@ void MainWindow::updateActions()
     bool hasDoc = doc != 0;
     CellDocument *cellDoc = hasDoc ? doc->asCellDocument() : 0;
     WorldDocument *worldDoc = hasDoc ? doc->asWorldDocument() : 0;
-
-    //TIM BAKER 07032023
-    World* world = worldDoc ? worldDoc->world() : (cellDoc ? cellDoc->world() : nullptr);
+    World *world = worldDoc ? worldDoc->world() : (cellDoc ? cellDoc->world() : nullptr);
+    bool bEnable10x10 = false;
 
     ui->actionSave->setEnabled(hasDoc);
     ui->actionSaveAs->setEnabled(hasDoc);
     ui->actionClose->setEnabled(hasDoc);
     ui->actionCloseAll->setEnabled(hasDoc);
 
-    ui->menuGenerate_Lots->setEnabled(worldDoc != 0);
+    ui->menuGenerate_Lots->setEnabled(worldDoc != 0 && bEnable10x10);
     ui->actionGenerateLotsAll->setEnabled(worldDoc != 0);
     ui->actionGenerateLotsSelected->setEnabled(worldDoc &&
                                                worldDoc->selectedCellCount());
+
+    ui->menuGenerate_Lots_8x8->setEnabled(worldDoc != 0);
+    ui->actionGenerateLotsAll8x8->setEnabled(worldDoc != 0);
+    ui->actionGenerateLotsSelected8x8->setEnabled(worldDoc && worldDoc->selectedCellCount());
+
+    ui->menuOverwriteSpawnMap256->setEnabled(worldDoc != nullptr);
+    ui->actionOverwriteSpawnMap_AllCells_256->setEnabled(worldDoc != nullptr);
+    ui->actionOverwriteSpawnMap_SelectedCells_256->setEnabled(worldDoc && worldDoc->selectedCellCount());
 
     ui->menuBMP_To_TMX->setEnabled(worldDoc != 0);
     ui->actionBMPToTMXAll->setEnabled(worldDoc != 0);
@@ -2637,6 +2808,7 @@ void MainWindow::updateActions()
 
     ui->actionLUAObjectDump->setEnabled(worldDoc != 0);
     ui->actionWriteObjects->setEnabled(worldDoc != 0);
+    ui->actionWriteRoomTonesToLua->setEnabled(worldDoc != 0);
 
     ui->actionCopy->setEnabled(worldDoc);
     ui->actionPaste->setEnabled(worldDoc && !Clipboard::instance()->isEmpty());
@@ -2685,23 +2857,25 @@ void MainWindow::updateActions()
     ui->actionRemoveInGameMapHole->setEnabled(canRemoveInGameMapHole());
     ui->actionConvertToPolygon->setEnabled(canConvertToInGameMapPolygon());
     ui->actionReadInGameMapFeaturesXML->setEnabled(hasDoc);
-    ui->actionWriteInGameMapFeaturesXML->setEnabled(hasDoc);
-
-    //TIM BAKER 07032023
+    ui->actionWriteInGameMapFeaturesXML->setEnabled(hasDoc && bEnable10x10);
+    ui->actionWriteInGameMapFeaturesXML_256->setEnabled(hasDoc);
     QString featuresXML = Preferences::instance()->worldMapXMLFile();
     bool hasReadFeaturesXML = false;
     if (hasDoc && !featuresXML.isEmpty()) {
         for (auto* cell : world->cells()) {
-            const InGameMapFeatures& features = cell->inGameMap().features();
+            const InGameMapFeatures &features = cell->inGameMap().features();
             if (features.isEmpty() == false) {
                 hasReadFeaturesXML = true;
                 break;
             }
         }
     }
-    ui->actionOverwriteInGameMapFeaturesXML->setText(tr("Overwrite \"%1\" (last loaded XML)").arg(featuresXML.isEmpty() ? tr("features.xml") : QFileInfo(featuresXML).absoluteFilePath()));
-    ui->actionOverwriteInGameMapFeaturesXML->setEnabled(hasDoc && hasReadFeaturesXML);
-
+    ui->actionOverwriteInGameMapFeaturesXML->setText(tr("Overwrite %1 10x10").arg(featuresXML.isEmpty() ? tr("features.xml") : QFileInfo(featuresXML).fileName()));
+    ui->actionOverwriteInGameMapFeaturesXML->setEnabled(hasDoc && hasReadFeaturesXML && bEnable10x10);
+    ui->actionOverwriteInGameMapFeaturesXML_256->setText(tr("Overwrite %1 8x8").arg(featuresXML.isEmpty() ? tr("features.xml") : QFileInfo(featuresXML).fileName()));
+    ui->actionOverwriteInGameMapFeaturesXML_256->setEnabled(hasDoc && hasReadFeaturesXML);
+    ui->actionCreateWorldImage->setEnabled(hasDoc);
+    ui->actionGenerate_BiomeMap->setEnabled(hasDoc);
     ui->actionSnapToGrid->setEnabled(cellDoc != 0);
     ui->actionShowCoordinates->setEnabled(worldDoc != 0);
 
@@ -2737,8 +2911,8 @@ void MainWindow::updateActions()
         int level = cellDoc->currentLevel();
         ui->currentLevelButton->setText(tr("Level: %1 ").arg(level)); // extra space cuz of down-arrow placement on Windows
         ui->currentLevelButton->setEnabled(true);
-        ui->actionLevelAbove->setEnabled(level < cellDoc->scene()->mapComposite()->maxLevel());
-        ui->actionLevelBelow->setEnabled(level > 0);
+        ui->actionLevelAbove->setEnabled(level < MAX_WORLD_LEVEL /*cellDoc->scene()->mapComposite()->maxLevel()*/);
+        ui->actionLevelBelow->setEnabled(level > MIN_WORLD_LEVEL);
         WorldObjectGroup *og = cellDoc->currentObjectGroup();
         ui->objectGroupButton->setText(tr("Obj Grp: %1 ")
                                        .arg((og && !og->name().isEmpty())
@@ -2754,6 +2928,29 @@ void MainWindow::updateActions()
         ui->objectGroupButton->setEnabled(false);
     }
 }
+
+void MainWindow::showAboutDialog()
+{
+    QString aboutText = QLatin1String(
+        "<h2>Unofficial Mapping Tools</h2>"
+        "<p>This is an unofficial fork of the <b>PZWorldEd</b> editor for the game <b>Project Zomboid</b>.</p>"
+        "<p><b>Important:</b> This tool is not affiliated with or endorsed by <b>The Indie Stone</b> or the developers of <b>Project Zomboid</b>.</p>"
+        "<p><b>Disclaimer:</b> This version may contain bugs, some of which may be identical to the official version. "
+        "The goal of this fork is to add features and functionalities that are currently absent from the original version.</p>"
+        "<p><b>Note:</b> Use at your own risk. The developer (me) are not responsible for any issues that may arise.</p>"
+        "<p><b>Contact:</b> If you have any questions or feedback, feel free to contact me on Discord <a href=\"https://discordapp.com/users/475933140695646209\">alree_unjammer</a>.</p>"
+    );
+
+    QMessageBox aboutBox;
+    aboutBox.setWindowTitle(tr("About Unofficial Mapping Tools"));
+    aboutBox.setText(aboutText);
+    aboutBox.setIcon(QMessageBox::Information);
+    aboutBox.setTextFormat(Qt::RichText);  // Ensures that the HTML tags are interpreted properly
+    aboutBox.exec();
+}
+
+
+
 
 void MainWindow::updateZoom()
 {

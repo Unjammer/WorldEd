@@ -17,6 +17,7 @@
 
 #include <QApplication>
 #include "mainwindow.h"
+#include "logger.h"
 
 #ifdef ZOMBOID
 #include "documentmanager.h"
@@ -28,7 +29,9 @@
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include <QTextStream>
-
+#include <QSplashScreen>
+#include <QSettings>
+#include <QDir>
 using namespace Tiled;
 using namespace Tiled::Internal;
 #endif
@@ -37,25 +40,30 @@ using namespace Tiled::Internal;
 #include <QImageReader>
 #endif
 
-
-
 int main(int argc, char *argv[])
 {
+
 #if ZOMBOID
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 #endif
     QApplication a(argc, argv);
+    QDir::setCurrent(QDir::currentPath());
+    Preferences *prefs = Preferences::instance();
 
     a.setOrganizationName(QLatin1String("TheIndieStone"));
     a.setApplicationName(QLatin1String("PZWorldEd"));
 #ifdef BUILD_INFO_VERSION
     a.setApplicationVersion(QLatin1String(AS_STRING(BUILD_INFO_VERSION)));
 #else
-    a.setApplicationVersion(QLatin1String("0.0.1"));
+    a.setApplicationVersion(QLatin1String("0.0.1a"));
 #endif
-    if (Preferences::instance()->enableDarkTheme())
+    // Unofficial Fork - begin
+
+
+    if (prefs->enableDarkTheme())
     {
-        QString fileName = QCoreApplication::applicationDirPath() + QLatin1String("/theme/dark.qss");
+        QString fileName = QDir::currentPath() + QLatin1String("/theme/") + prefs->themes();
+        Logger::instance().log(QLatin1String("MainWindow - Theme : %1").arg(fileName), QLatin1String("INFO"));
         QFile file(fileName);
         file.open(QIODevice::ReadOnly | QIODevice::Text);
         QTextStream in(&file);
@@ -63,6 +71,9 @@ int main(int argc, char *argv[])
 
         a.setStyleSheet(stylesheet);
     }
+    // Unofficial Fork - end
+
+
 #ifdef Q_WS_MAC
     a.setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
@@ -73,7 +84,6 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     w.show();
-
 
     if (!w.InitConfigFiles())
         return 0;
@@ -88,10 +98,14 @@ int main(int argc, char *argv[])
     TilesetManager::instance()->waitForTilesets(TilesetManager::instance()->tilesets(), &w);
     progress.release();
 
-    if (Preferences::instance()->LoadLastActivProject())
+    // Unofficial Fork - begin
+    if (prefs->LoadLastActivProject())
     {
         w.openLastFiles();
     }
+    // Unofficial Fork - end
+
+
 
 #if 1
     int ret = a.exec();

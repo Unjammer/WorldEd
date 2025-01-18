@@ -19,6 +19,7 @@
 #define PREFERENCESDIALOG_H
 
 #include <QDialog>
+#include <QComboBox>
 
 class WorldDocument;
 
@@ -34,17 +35,22 @@ class PreferencesDialog : public QDialog
 public:
     explicit PreferencesDialog(WorldDocument *worldDoc, QWidget *parent = 0);
 
+private:
+    void populateThemeList(QComboBox *themeListbox, const QString &directoryPath);
+
 private slots:
     void browseTilesDirectory();
-
+    void browseTileZedPath();
     void gridColorChanged(const QColor &gridColor);
-
+    void resetThumbWidth();
     void accept();
-    
+    void onThemeChanged(const QString &theme);
 private:
     Ui::PreferencesDialog *ui;
     WorldDocument *mWorldDoc;
     QString mTilesDirectory;
+    QString mTileZedPath;
+    QString mTheme;
     QColor mGridColor;
 };
 

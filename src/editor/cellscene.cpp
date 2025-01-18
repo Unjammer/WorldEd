@@ -32,6 +32,7 @@
 #include "undoredo.h"
 #include "world.h"
 #include "worldcell.h"
+#include "worldconstants.h"
 #include "worlddocument.h"
 #include "zoomable.h"
 
@@ -39,6 +40,7 @@
 
 #include "isometricrenderer.h"
 #include "map.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "objectgroup.h"
 #include "tile.h"
@@ -89,10 +91,8 @@ public:
                          QWidget *)
     {
         QColor gridColor = Preferences::instance()->gridColor();
-        int gridOpacity = Preferences::instance()->gridOpacity();
-        int gridWidth = Preferences::instance()->gridWidth();
         mScene->renderer()->drawGrid(painter, option->exposedRect, gridColor,
-                                     mScene->document()->currentLevel(), gridOpacity, gridWidth);
+                                     mScene->document()->currentLevel());
     }
 
     void updateBoundingRect()
@@ -147,17 +147,36 @@ void CellMiniMapItem::paint(QPainter *painter,
 {
     Q_UNUSED(option)
 
+    QVector<const LotImage*> lotImages;
+    for (const LotImage &lotImage : mLotImages) {
+        if (!lotImage.mMapImage || lotImage.mLevel >= 0)
+            continue;
+        lotImages += &lotImage;
+    }
+    std::sort(lotImages.begin(), lotImages.end(), [](const LotImage *lotImage1, const LotImage *lotImage2) {
+        return lotImage1->mBounds.bottom() > lotImage2->mBounds.bottom();
+    });
+    for (const LotImage *lotImage : lotImages) {
+        paintLotImage(painter, *lotImage);
+    }
+
     if (mMapImage) {
         QRectF target = mMapImageBounds;
         QRectF source = QRect(QPoint(0, 0), mMapImage->image().size());
         painter->drawImage(target, mMapImage->image(), source);
     }
 
-    foreach (const LotImage &lotImage, mLotImages) {
-        if (!lotImage.mMapImage) continue;
-        QRectF target = lotImage.mBounds;
-        QRectF source = QRect(QPoint(0, 0), lotImage.mMapImage->image().size());
-        painter->drawImage(target, lotImage.mMapImage->image(), source);
+    lotImages.clear();
+    for (const LotImage &lotImage : mLotImages) {
+        if (!lotImage.mMapImage || lotImage.mLevel < 0)
+            continue;
+        lotImages += &lotImage;
+    }
+    std::sort(lotImages.begin(), lotImages.end(), [](const LotImage *lotImage1, const LotImage *lotImage2) {
+        return lotImage1->mBounds.bottom() > lotImage2->mBounds.bottom();
+    });
+    for (const LotImage *lotImage : lotImages) {
+        paintLotImage(painter, *lotImage);
     }
 }
 
@@ -192,6 +211,7 @@ void CellMiniMapItem::updateLotImage(int index)
         mLotImages[index].mBounds = QRectF();
         mLotImages[index].mMapImage = 0;
     }
+    mLotImages[index].mLevel = lot->level();
 }
 
 void CellMiniMapItem::updateBoundingRect()
@@ -272,6 +292,16 @@ void CellMiniMapItem::mapImageChanged(MapImage *mapImage)
             return;
         }
     }
+}
+
+void CellMiniMapItem::paintLotImage(QPainter *painter, const LotImage &lotImage)
+{
+    if (lotImage.mMapImage == nullptr) {
+        return;
+    }
+    QRectF target = lotImage.mBounds;
+    QRectF source = QRect(QPoint(0, 0), lotImage.mMapImage->image().size());
+    painter->drawImage(target, lotImage.mMapImage->image(), source);
 }
 
 /////
@@ -802,6 +832,7 @@ void LayerGroupVBO::paint2(QPainter *painter, Tiled::MapRenderer *renderer, cons
 
         QList<QPoint> squares;
         getSquaresInRect(renderer, exposedRect, squares);
+        bool bShowInvisibleTiles = Preferences::instance()->showInvisibleTiles();
         {
             VBOTiles *currentTiles = nullptr;
             for (const QPoint& square : qAsConst(squares)) {
@@ -849,6 +880,8 @@ void LayerGroupVBO::paint2(QPainter *painter, Tiled::MapRenderer *renderer, cons
                         if ((tile.mHideIfVisible != nullptr) && isLotVisible(tile.mHideIfVisible))
                             continue;
                         if ((tile.mSubMap != nullptr) && (isLotVisible(tile.mSubMap) == false))
+                            continue;
+                        if (tile.mInvisible && (bShowInvisibleTiles == false))
                             continue;
                         if ((tile.mLayerIndex >= 0) && (tile.mLayerIndex < layerCount)) {
                             if (visibleLayers[tile.mLayerIndex] == false)
@@ -1023,6 +1056,10 @@ void LayerGroupVBO::gatherTiles(Tiled::MapRenderer *renderer, const QRectF& expo
     const int tileWidth = DISPLAY_TILE_WIDTH;
     const int tileHeight = DISPLAY_TILE_HEIGHT;
 
+    Tile *invisibleTile = Internal::TilesetManager::instance()->invisibleTile();
+    bool bShowInvisibleTiles = Preferences::instance()->showInvisibleTiles();
+    Tile *missingTile = Internal::TilesetManager::instance()->missingTile();
+
     QVector<TilePlusLayer> cells(40); // or QVarLengthArray
 
     for (const QPoint& point : qAsConst(rasterize.mPoints)) {
@@ -1050,16 +1087,28 @@ void LayerGroupVBO::gatherTiles(Tiled::MapRenderer *renderer, const QRectF& expo
                     if (cell.mTile == nullptr)
                         continue;
                     const Tile *tile = cell.mTile;
-                    VBOTile vboTile;
+                    if (tile->properties().contains(QStringLiteral("invisible"))) {
+                        tile = invisibleTile;
+                    }
+                    if (tile->image().isNull()) {
+                        tile = missingTile;
+                    }
                     Tileset *tileset = tile->tileset();
+                    bool bJUMBO = tileset->name().contains(QStringLiteral("JUMBO_"));
+                    VBOTile vboTile;
                     vboTile.mSubMap = cell.mSubMap;
                     vboTile.mHideIfVisible = cell.mHideIfVisible;
                     vboTile.mLayerIndex = mMapCompositeVBO->mLayerNameToIndex.value(cell.mLayerName, -1);
-                    vboTile.mRect = QRect(screenPos.x() + tile->offset().x(), screenPos.y() + tile->offset().y() - tile->height(), tile->atlasSize().width(), tile->atlasSize().height());
+                    vboTile.mRect = QRect(screenPos.x() + tileset->tileOffset().x() + tile->offset().x(),
+                                          screenPos.y() + tileset->tileOffset().y() + tile->offset().y() - tile->height(),
+                                          tile->atlasSize().width(), tile->atlasSize().height());
                     vboTile.mTilesetName = tileset->name();
                     vboTile.mAtlasUVST = tile->atlasUVST();
+                    vboTile.mInvisible = tile == invisibleTile;
 
-                    if (tileWidth == tile->width() * 2) {
+                    if (bJUMBO) {
+                        vboTile.mRect.translate(-tileWidth / 2, 0); // FIXME: Shouldn't Tiled::setZomboidTileOffset() take care of this? Possibly a TileScale=2 issue.
+                    } else if (tileWidth == tile->width() * 2) {
                         vboTile.mRect.translate(tile->offset().x(), tile->offset().y() - tile->height());
                         vboTile.mRect.setWidth(tile->atlasSize().width() * 2);
                         vboTile.mRect.setHeight(tile->atlasSize().height() * 2);
@@ -1070,10 +1119,96 @@ void LayerGroupVBO::gatherTiles(Tiled::MapRenderer *renderer, const QRectF& expo
                     }
                     tileCount[vx + vy * VBO_SQUARES]++;
                     tiles += vboTile;
+
+                    if (bJUMBO) {
+                        tileCount[vx + vy * VBO_SQUARES] += tryAddExtraJumbo_Trunk(tile, screenPos, tileWidth, tiles);
+                        tileCount[vx + vy * VBO_SQUARES] += tryAddExtraJumbo_Leaves(tile, screenPos, tileWidth, tiles);
+                    }
                 }
             }
         }
     }
+}
+
+// FIXME: Copied from ZLevelRenderer.cpp
+namespace {
+struct JUMBO
+{
+    QString tilesetName;
+    bool bHasLeaves;
+};
+
+static JUMBO s_jumbo[] = {
+    { QStringLiteral("e_americalholly"), false },
+    { QStringLiteral("e_americanlinden"), true },
+    { QStringLiteral("e_canadianhemlock"), false },
+    { QStringLiteral("e_carolinasilverbell"), true },
+    { QStringLiteral("e_cockspurhawthorn"), true },
+    { QStringLiteral("e_dogwood"), true },
+    { QStringLiteral("e_easternredbud"), false },
+    { QStringLiteral("e_redmaple"), true },
+    { QStringLiteral("e_riverbirch"), true },
+    { QStringLiteral("e_virginiapine"), false },
+    { QStringLiteral("e_yellowwood"), true },
+};
+} // namespace anonymous
+
+int LayerGroupVBO::tryAddExtraJumbo_Trunk(const Tiled::Tile *tile, const QPointF &screenPos, int tileWidth, QList<VBOTile> &tiles)
+{
+    VBOTile &vboTile0 = tiles.last();
+    // Leaves overlay
+    int columns = tile->tileset()->columnCount();
+    int row_trunk = 0;
+    int row = tile->id() / columns;
+    if (row < 2) {
+        return 0;
+    }
+    Tileset *tileset = tile->tileset();
+    QString tilesetName = tileset->name();
+    for (int i = 0; i < sizeof(s_jumbo) / sizeof(JUMBO); i++) {
+        if (s_jumbo[i].bHasLeaves && tilesetName.startsWith(s_jumbo[i].tilesetName)) {
+            Tile *tile2 = tileset->tileAt(columns * row_trunk + tile->id() % columns);
+
+            VBOTile vboTile = vboTile0;
+            vboTile.mRect = QRect(screenPos.x() + tileset->tileOffset().x() + tile2->offset().x(),
+                                  screenPos.y() + tileset->tileOffset().y() + tile2->offset().y() - tile2->height(),
+                                  tile2->atlasSize().width(), tile2->atlasSize().height());
+            vboTile.mAtlasUVST = tile2->atlasUVST();
+            vboTile.mRect.translate(-tileWidth / 2, 0); // FIXME: Shouldn't Tiled::setZomboidTileOffset() take care of this? Possibly a TileScale=2 issue.
+            tiles.insert(tiles.size() - 1, vboTile);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int LayerGroupVBO::tryAddExtraJumbo_Leaves(const Tiled::Tile *tile, const QPointF &screenPos, int tileWidth, QList<VBOTile> &tiles)
+{
+    VBOTile &vboTile0 = tiles.last();
+    // Leaves overlay
+    int columns = tile->tileset()->columnCount();
+    int row_summer = 3;
+    int row = tile->id() / columns;
+    if (row >= 2) {
+        return 0;
+    }
+    Tileset *tileset = tile->tileset();
+    QString tilesetName = tileset->name();
+    for (int i = 0; i < sizeof(s_jumbo) / sizeof(JUMBO); i++) {
+        if (s_jumbo[i].bHasLeaves && tilesetName.startsWith(s_jumbo[i].tilesetName)) {
+            Tile *tile2 = tileset->tileAt(columns * row_summer + tile->id() % columns);
+
+            VBOTile vboTile = vboTile0;
+            vboTile.mRect = QRect(screenPos.x() + tileset->tileOffset().x() + tile2->offset().x(),
+                                  screenPos.y() + tileset->tileOffset().y() + tile2->offset().y() - tile2->height(),
+                                  tile2->atlasSize().width(), tile2->atlasSize().height());
+            vboTile.mAtlasUVST = tile2->atlasUVST();
+            vboTile.mRect.translate(-tileWidth / 2, 0); // FIXME: Shouldn't Tiled::setZomboidTileOffset() take care of this? Possibly a TileScale=2 issue.
+            tiles += vboTile;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 VBOTiles *LayerGroupVBO::getTilesFor(const QPoint &square, bool bCreate)
@@ -1228,13 +1363,13 @@ LayerGroupVBO *MapCompositeVBO::getLayerVBO(CompositeLayerGroupItem *item)
         mUsedTilesets = mMapComposite->usedTilesets();
     }
 #endif
-    LayerGroupVBO* layerVBO = mLayerVBOs[item->layerGroup()->level()];
+    LayerGroupVBO* layerVBO = mLayerVBOs[item->layerGroup()->level() + WORLD_GROUND_LEVEL];
     if (layerVBO == nullptr) {
         layerVBO = new LayerGroupVBO();
         layerVBO->mMapCompositeVBO = this;
         layerVBO->mLayerGroupItem = item;
         layerVBO->mLayerGroup = item->layerGroup();
-        mLayerVBOs[item->layerGroup()->level()] = layerVBO;
+        mLayerVBOs[item->layerGroup()->level() + WORLD_GROUND_LEVEL] = layerVBO;
     }
     return layerVBO;
 }
@@ -1297,6 +1432,8 @@ exposed = QRect(); // FIXME: flush area covered by whole VBOTiles
         if (exposed.isNull())
             exposed = mLayerGroup->boundingRect(mRenderer).toAlignedRect();
         mLayerGroup->prepareDrawing3(mRenderer, exposed);
+        Tileset *invisibleTileset = Internal::TilesetManager::instance()->invisibleTileset();
+        Tileset *missingTileset = Internal::TilesetManager::instance()->missingTileset();
 
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
@@ -1314,11 +1451,17 @@ exposed = QRect(); // FIXME: flush area covered by whole VBOTiles
                 }
 
                 mcVBO->mUsedTilesets = mc->usedTilesets();
+                if (mcVBO->mUsedTilesets.contains(invisibleTileset) == false) {
+                    mcVBO->mUsedTilesets += invisibleTileset;
+                }
+                if (mcVBO->mUsedTilesets.contains(missingTileset) == false) {
+                    mcVBO->mUsedTilesets += missingTileset;
+                }
                 mcVBO->mLayerNameToIndex.clear();
                 if (CompositeLayerGroup *rootLayerGroup = mc->root()->layerGroupForLevel(mLayerGroup->level())) {
                     for (int i = 0; i < rootLayerGroup->layerCount(); i++) {
                         TileLayer *layer = rootLayerGroup->layers()[i];
-                        mcVBO->mLayerNameToIndex[layer->name()] = i;
+                        mcVBO->mLayerNameToIndex[layer->nameWithPrefix()] = i;
                     }
                 }
 
@@ -2739,7 +2882,7 @@ void ObjectItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         painter->setPen(pen);
         painter->setRenderHint(QPainter::Antialiasing);
 
-        QPolygonF screenPolygon = mRenderer->tileToPixelCoords(mPolygon.translated(mDragOffset));
+        QPolygonF screenPolygon = mRenderer->tileToPixelCoords(mPolygon.translated(mDragOffset), mObject->level());
 
         switch (mObject->geometryType()) {
         case ObjectGeometryType::INVALID:
@@ -2809,7 +2952,7 @@ void ObjectItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
             if (mPolylineOutline.isEmpty())
                 break;
             for (const QPointF& op : mPolylineOutline) {
-                screenPolygon2 += mRenderer->tileToPixelCoords(op + mDragOffset);
+                screenPolygon2 += mRenderer->tileToPixelCoords(op + mDragOffset, mObject->level());
             }
             screenPolygon2 += screenPolygon2[0];
             painter->drawPolyline(screenPolygon2);
@@ -3100,7 +3243,7 @@ void ObjectItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
     qreal zoom = view->zoomable()->scale();
     zoom = qMin(zoom, 1.0);
 
-    QPolygonF scenePoly = mRenderer->tileToPixelCoords(mPolygon, 0);
+    QPolygonF scenePoly = mRenderer->tileToPixelCoords(mPolygon, mObject->level());
 
     // Don't add points near other points
     for (int i = 0; i < scenePoly.size(); i++) {
@@ -3158,7 +3301,7 @@ void ObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 QPainterPath ObjectItem::shape() const
 {
     if (mObject->points().isEmpty() == false) {
-        QPolygonF polygon = mRenderer->tileToPixelCoords(mPolygon, 0);
+        QPolygonF polygon = mRenderer->tileToPixelCoords(mPolygon, mObject->level());
 
         if (isPolygon())
             polygon += polygon[0];
@@ -3271,7 +3414,7 @@ void ObjectItem::synchWithObject()
             mPolylineOutline = createPolylineOutline();
             if (mPolylineOutline.empty())
                 break;
-            QRectF bounds = mRenderer->tileToPixelCoords(mPolylineOutline.translated(mDragOffset)).boundingRect().adjusted(-20, -20, 20, 20);
+            QRectF bounds = mRenderer->tileToPixelCoords(mPolylineOutline.translated(mDragOffset), mObject->level()).boundingRect().adjusted(-20, -20, 20, 20);
             if (bounds != mBoundingRect) {
                 prepareGeometryChange();
                 mBoundingRect = bounds;
@@ -3281,7 +3424,7 @@ void ObjectItem::synchWithObject()
         break;
     }
 
-    QRectF bounds = mRenderer->tileToPixelCoords(mPolygon.translated(mDragOffset)).boundingRect().adjusted(-20, -20, 20, 20);
+    QRectF bounds = mRenderer->tileToPixelCoords(mPolygon.translated(mDragOffset), mObject->level()).boundingRect().adjusted(-20, -20, 20, 20);
     if (bounds != mBoundingRect) {
         prepareGeometryChange();
         mBoundingRect = bounds;
@@ -3343,7 +3486,7 @@ int ObjectItem::pointAt(qreal sceneX, qreal sceneY)
     qreal zoom = view->zoomable()->scale();
     zoom = qMin(zoom, 1.0);
 
-    QPolygonF scenePoly = mRenderer->tileToPixelCoords(mPolygon, 0);
+    QPolygonF scenePoly = mRenderer->tileToPixelCoords(mPolygon, mObject->level());
     for (int i = 0; i < scenePoly.size(); i++) {
         float d = QVector2D(QPointF(sceneX, sceneY)).distanceToPoint(QVector2D(scenePoly[i]));
         if (d < 10 / (float) zoom) {
@@ -3465,7 +3608,7 @@ void ObjectPointHandle::mousePressEvent(QGraphicsSceneMouseEvent *event)
         if (event->buttons() & Qt::LeftButton) {
             if (mOldPos != geometryPoint()) {
                 mObjectItem->movePoint(mPointIndex, mOldPos);
-                setPos(mObjectItem->mRenderer->tileToPixelCoords(mOldPos.x, mOldPos.y));
+                setPos(mObjectItem->mRenderer->tileToPixelCoords(mOldPos.x, mOldPos.y, mObjectItem->mObject->level()));
                 mCancelMove = true;
             }
         }
@@ -3494,7 +3637,7 @@ void ObjectPointHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         int objectIndex = mObjectItem->object()->index();
         WorldCellObjectPoint newPos = geometryPoint();
         mObjectItem->movePoint(mPointIndex, mOldPos);
-        setPos(mObjectItem->mRenderer->tileToPixelCoords(mOldPos.x, mOldPos.y));
+        setPos(mObjectItem->mRenderer->tileToPixelCoords(mOldPos.x, mOldPos.y, mObjectItem->mObject->level()));
 
         WorldCellObjectPoints coords = mObjectItem->object()->points();
         int pointIndex = coords.indexOf(newPos);
@@ -3543,7 +3686,7 @@ QVariant ObjectPointHandle::itemChange(GraphicsItemChange change, const QVariant
 
         if (change == ItemPositionChange) {
             if (mCancelMove) {
-                return mObjectItem->mRenderer->tileToPixelCoords(mOldPos.x, mOldPos.y);
+                return mObjectItem->mRenderer->tileToPixelCoords(mOldPos.x, mOldPos.y, mObjectItem->mObject->level());
             }
             bool snapToGrid = true;
 
@@ -3552,7 +3695,7 @@ QVariant ObjectPointHandle::itemChange(GraphicsItemChange change, const QVariant
             QPointF pixelPos = value.toPointF() + itemPos;
 
             // Calculate the new coordinates in tiles
-            QPointF tileCoords = renderer->pixelToTileCoords(pixelPos, 0);
+            QPointF tileCoords = renderer->pixelToTileCoords(pixelPos, mObjectItem->mObject->level());
 
             const QPointF objectPos = { 0, 0 };
             tileCoords -= objectPos;
@@ -3564,11 +3707,11 @@ QVariant ObjectPointHandle::itemChange(GraphicsItemChange change, const QVariant
                 tileCoords = tileCoords.toPoint();
             tileCoords += objectPos;
 
-            return renderer->tileToPixelCoords(tileCoords, 0) - itemPos;
+            return renderer->tileToPixelCoords(tileCoords, mObjectItem->mObject->level()) - itemPos;
         }
         else if (change == ItemPositionHasChanged) {
             const QPointF newPos = value.toPointF();
-            QPointF tileCoords = renderer->pixelToTileCoords(newPos, 0);
+            QPointF tileCoords = renderer->pixelToTileCoords(newPos, mObjectItem->mObject->level());
             WorldCellObjectPoint point(tileCoords.x(), tileCoords.y());
             mObjectItem->movePoint(mPointIndex, point);
             if (isSelected() && EditPolygonObjectTool::instance().isCurrent()) {
@@ -3608,7 +3751,7 @@ void ObjectPointHandle::updateSizeLabel()
 
 /////
 
-BasementStairHandle::BasementStairHandle(BasementItem* item, CellScene* scene)
+BasementStairHandle::BasementStairHandle(BasementItem *item, CellScene *scene)
     : QGraphicsItem(item)
     , mItem(item)
     , mScene(scene)
@@ -3617,9 +3760,9 @@ BasementStairHandle::BasementStairHandle(BasementItem* item, CellScene* scene)
     , mCancelMove(false)
 {
     setFlags(QGraphicsItem::ItemIsMovable |
-        QGraphicsItem::ItemSendsGeometryChanges |
-        //             QGraphicsItem::ItemIgnoresTransformations |
-        QGraphicsItem::ItemIgnoresParentOpacity);
+             QGraphicsItem::ItemSendsGeometryChanges |
+//             QGraphicsItem::ItemIgnoresTransformations |
+             QGraphicsItem::ItemIgnoresParentOpacity);
     setCursor(Qt::SizeAllCursor);
     setAcceptHoverEvents(true);
     synch();
@@ -3646,7 +3789,7 @@ QPainterPath BasementStairHandle::shape() const
     return path;
 }
 
-void BasementStairHandle::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*)
+void BasementStairHandle::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
     QColor color = mItem->object()->group()->color();
     color.setAlphaF(0.25f);
@@ -3658,7 +3801,7 @@ void BasementStairHandle::paint(QPainter* painter, const QStyleOptionGraphicsIte
     stairRect.translate(-stairRect.topLeft());
     int level = mItem->object()->level();
     QPolygonF scenePoly = mScene->renderer()->tileToPixelCoords(stairRect, level);
-    scenePoly.translate(-mScene->renderer()->tileToPixelCoords(QPoint(), mItem->object()->level()));
+    scenePoly.translate(-mScene->renderer()->tileToPixelCoords(QPoint(), level));
     painter->drawPolygon(scenePoly);
 }
 
@@ -3675,25 +3818,25 @@ void BasementStairHandle::synch()
     }
 }
 
-void BasementStairHandle::hoverEnterEvent(QGraphicsSceneHoverEvent* event)
+void BasementStairHandle::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
     Q_UNUSED(event)
-        /*if (SubMapTool::instance()->isCurrent())*/ {
+    /*if (SubMapTool::instance()->isCurrent())*/ {
         mMouseOver = true;
         update();
     }
 }
 
-void BasementStairHandle::hoverLeaveEvent(QGraphicsSceneHoverEvent* event)
+void BasementStairHandle::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
     Q_UNUSED(event)
-        if (mMouseOver) {
-            mMouseOver = false;
-            update();
-        }
+    if (mMouseOver) {
+        mMouseOver = false;
+        update();
+    }
 }
 
-void BasementStairHandle::mousePressEvent(QGraphicsSceneMouseEvent* event)
+void BasementStairHandle::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         // Where the user clicked, relative to the top-left corner of the Basement object, in tile coordinates.
@@ -3702,7 +3845,7 @@ void BasementStairHandle::mousePressEvent(QGraphicsSceneMouseEvent* event)
     QGraphicsItem::mousePressEvent(event);
 }
 
-void BasementStairHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
+void BasementStairHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsItem::mouseReleaseEvent(event);
     QPoint offset = mItem->stairDragOffset();
@@ -3718,27 +3861,25 @@ void BasementStairHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
         QRect stairRect = mItem->stairBoundsRelativeToThis();
         if (stairRect.isEmpty())
             return;
-        WorldDocument* document = mScene->document()->worldDocument();
+        WorldDocument *document = mScene->document()->worldDocument();
         document->undoStack()->beginMacro(QStringLiteral("Set Basement Stair Position"));
-        if (PropertyDef* pd_StairX = mItem->object()->cell()->world()->propertyDefinition(QStringLiteral("StairX"))) {
+        if (PropertyDef *pd_StairX = mItem->object()->cell()->world()->propertyDefinition(QStringLiteral("StairX"))) {
             int stairX = stairRect.x() + offset.x();
-            if (Property* p_StairX = mItem->object()->properties().find(pd_StairX)) {
+            if (Property *p_StairX = mItem->object()->properties().find(pd_StairX)) {
                 if (stairRect.x() != stairX) {
                     document->setPropertyValue(mItem->object(), p_StairX, QString::number(stairX));
                 }
-            }
-            else {
+            } else {
                 document->addProperty(mItem->object(), pd_StairX->mName, QString::number(stairX));
             }
         }
-        if (PropertyDef* pd_StairY = mItem->object()->cell()->world()->propertyDefinition(QStringLiteral("StairY"))) {
+        if (PropertyDef *pd_StairY = mItem->object()->cell()->world()->propertyDefinition(QStringLiteral("StairY"))) {
             int stairY = stairRect.y() + offset.y();
-            if (Property* p_StairY = mItem->object()->properties().find(pd_StairY)) {
+            if (Property *p_StairY = mItem->object()->properties().find(pd_StairY)) {
                 if (stairRect.y() != stairY) {
                     document->setPropertyValue(mItem->object(), p_StairY, QString::number(stairY));
                 }
-            }
-            else {
+            } else {
                 document->addProperty(mItem->object(), pd_StairY->mName, QString::number(stairY));
             }
         }
@@ -3752,7 +3893,7 @@ void BasementStairHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
     }
 }
 
-QVariant BasementStairHandle::itemChange(GraphicsItemChange change, const QVariant& value)
+QVariant BasementStairHandle::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     if (!mSynching) {
         if (change == ItemPositionChange) {
@@ -3785,7 +3926,7 @@ QVariant BasementStairHandle::itemChange(GraphicsItemChange change, const QVaria
 
 /////
 
-BasementItem::BasementItem(WorldCellObject* object, CellScene* scene, QGraphicsItem* parent)
+BasementItem::BasementItem(WorldCellObject *object, CellScene *scene, QGraphicsItem *parent)
     : ObjectItem(object, scene, parent)
     , mStairHandle(new BasementStairHandle(this, scene))
 {
@@ -3800,7 +3941,7 @@ QRectF BasementItem::boundingRect() const
     return bounds;
 }
 
-void BasementItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void BasementItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     ObjectItem::paint(painter, option, widget);
     QRect stairRect = stairBoundsRelativeToThis();
@@ -3808,7 +3949,7 @@ void BasementItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     stairRect.translate(mStairDragOffset);
     QColor color = mObject->group()->color();
     if (mIsSelected)
-        color = QColor(0x33, 0x99, 0xff/*,255/8*/);
+        color = QColor(0x33,0x99,0xff/*,255/8*/);
     if (isMouseOverHighlighted())
         color = color.lighter();
     mRenderer->drawFancyRectangle(painter, stairRect, color, mObject->level());
@@ -3834,42 +3975,42 @@ void BasementItem::synchWithObject()
 
 int BasementItem::getStairOffsetX() const
 {
-    PropertyDef* pd_StairX = mObject->cell()->world()->propertyDefinition(QStringLiteral("StairX"));
+    PropertyDef *pd_StairX = mObject->cell()->world()->propertyDefinition(QStringLiteral("StairX"));
     if (pd_StairX == nullptr)
         return 0;
     PropertyList properties;
     resolveProperties(mObject, properties);
-    Property* p_StairX = properties.find(pd_StairX);
+    Property *p_StairX = properties.find(pd_StairX);
     if (p_StairX == nullptr)
         return 0;
     bool ok = false;
-    int stairX = p_StairX->mValue.toInt(&ok);
+    int stairX =  p_StairX->mValue.toInt(&ok);
     return ok ? stairX : 0;
 }
 
 int BasementItem::getStairOffsetY() const
 {
-    PropertyDef* pd_StairY = mObject->cell()->world()->propertyDefinition(QStringLiteral("StairY"));
+    PropertyDef *pd_StairY = mObject->cell()->world()->propertyDefinition(QStringLiteral("StairY"));
     if (pd_StairY == nullptr)
         return 0;
     PropertyList properties;
     resolveProperties(mObject, properties);
-    Property* p_StairY = properties.find(pd_StairY);
+    Property *p_StairY = properties.find(pd_StairY);
     if (p_StairY == nullptr)
         return 0;
     bool ok = false;
-    int stairY = p_StairY->mValue.toInt(&ok);
+    int stairY =  p_StairY->mValue.toInt(&ok);
     return ok ? stairY : 0;
 }
 
 QString BasementItem::getStairDirection() const
 {
-    PropertyDef* pd_Direction = mObject->cell()->world()->propertyDefinition(QStringLiteral("StairDirection"));
+    PropertyDef *pd_Direction = mObject->cell()->world()->propertyDefinition(QStringLiteral("StairDirection"));
     if (pd_Direction == nullptr)
         return QStringLiteral("N");
     PropertyList properties;
     resolveProperties(mObject, properties);
-    Property* p_Direction = properties.find(pd_Direction);
+    Property *p_Direction = properties.find(pd_Direction);
     if (p_Direction == nullptr)
         return pd_Direction->mDefaultValue;
     return p_Direction->mValue;
@@ -3890,7 +4031,6 @@ QRect BasementItem::stairBoundsRelativeToThis() const
 }
 
 /////
-
 
 RoomToneItem::RoomToneItem(WorldCellObject *object, CellScene *scene, QGraphicsItem *parent) :
     ObjectItem(object, scene, parent),
@@ -4074,6 +4214,7 @@ void SubMapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         QLineF bottom(bounds.bottomLeft(), bounds.bottomRight());
 
         QPen dashPen(Qt::DashLine);
+        dashPen.setCosmetic(true);
         dashPen.setDashOffset(qMax(qreal(0), mBoundingRect.x()));
         painter->setPen(dashPen);
         painter->drawLines(QVector<QLineF>() << top << bottom);
@@ -4198,16 +4339,13 @@ void CellRoadItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
-    QColor c = Qt::gray;
+    QColor c = Qt::blue;
     if (mSelected)
         c = Qt::green;
     if (mEditable)
         c = Qt::yellow;
-
-     painter->setPen(Qt::darkRed);
-    
+    painter->setPen(c);
     painter->drawPath(shape());
-    painter->fillPath(shape(), c);
 }
 
 void CellRoadItem::synchWithRoad()
@@ -4251,16 +4389,14 @@ void CellRoadItem::setDragOffset(const QPoint &offset)
 
 /////
 
-DnDItem::DnDItem(const QString &path, MapRenderer *renderer, int level, QGraphicsItem *parent)
+DnDItem::DnDItem(MapInfo *mapInfo, MapRenderer *renderer, int level, QGraphicsItem *parent)
     : QGraphicsItem(parent)
-    , mMapImage(MapImageManager::instance()->getMapImage(path))
+    , mMapInfo(mapInfo)
+    , mMapImage(MapImageManager::instance()->getMapImage(mapInfo->path()))
     , mRenderer(renderer)
     , mLevel(level)
 {
-    if (mMapImage != nullptr)
-    {
-        setHotSpot(mMapImage->mapInfo()->width() / 2, mMapImage->mapInfo()->height() / 2);
-    }
+    setHotSpot(mMapInfo->width() / 2, mMapInfo->height() / 2);
 }
 
 QRectF DnDItem::boundingRect() const
@@ -4270,18 +4406,22 @@ QRectF DnDItem::boundingRect() const
 
 void DnDItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    painter->setOpacity(0.5);
-    QRectF target = mBoundingRect;
-    QRectF source = QRect(QPoint(0, 0), mMapImage->image().size());
-    painter->drawImage(target, mMapImage->image(), source);
+    if (mMapImage) {
+        painter->setOpacity(0.5);
+        QRectF target = mBoundingRect;
+        QRectF source = QRect(QPoint(0, 0), mMapImage->image().size());
+        painter->drawImage(target, mMapImage->image(), source);
+    }
     painter->setOpacity(effectiveOpacity());
 
     QRect tileBounds(mPositionInMap.x() - mHotSpot.x(), mPositionInMap.y() - mHotSpot.y(),
-                     mMapImage->mapInfo()->width(), mMapImage->mapInfo()->height());
+                     mMapInfo->width(), mMapInfo->height());
     mRenderer->drawFancyRectangle(painter, tileBounds, Qt::darkGray, mLevel);
 
-
-#ifdef _DEBUG
+#if 2//def _DEBUG
+    QPen pen;
+    pen.setCosmetic(true);
+    painter->setPen(pen);
     painter->drawRect(mBoundingRect);
 #endif
 }
@@ -4295,12 +4435,15 @@ QPainterPath DnDItem::shape() const
 void DnDItem::setTilePosition(QPoint tilePos)
 {
     mPositionInMap = tilePos;
-
-    qreal tileScale = mRenderer->boundingRect(QRect(0,0,1,1)).width() / (qreal)mMapImage->tileSize().width();
-    QSize scaledImageSize(mMapImage->image().size() / mMapImage->scale() * tileScale);
-    QRectF bounds = QRectF(-mMapImage->tileToImageCoords(mHotSpot) / mMapImage->scale() * tileScale,
-                           scaledImageSize);
-    bounds.translate(mRenderer->tileToPixelCoords(mPositionInMap, mLevel));
+    QRectF bounds;
+    if (mMapImage) {
+        qreal tileScale = mRenderer->boundingRect(QRect(0,0,1,1)).width() / (qreal)mMapImage->tileSize().width();
+        QSize scaledImageSize(mMapImage->image().size() / mMapImage->scale() * tileScale);
+        bounds = QRectF(-mMapImage->tileToImageCoords(mHotSpot) / mMapImage->scale() * tileScale, scaledImageSize);
+        bounds.translate(mRenderer->tileToPixelCoords(mPositionInMap, mLevel));
+    } else {
+        bounds = mRenderer->boundingRect(mMapInfo->bounds().translated(mPositionInMap - mHotSpot), mLevel);
+    }
     if (bounds != mBoundingRect) {
         prepareGeometryChange();
         mBoundingRect = bounds;
@@ -4311,19 +4454,28 @@ void DnDItem::setHotSpot(const QPoint &pos)
 {
     // Position the item so that the top-left corner of the hotspot tile is at the item's origin
     mHotSpot = pos;
-    qreal tileScale = mRenderer->boundingRect(QRect(0,0,1,1)).width() / (qreal)mMapImage->tileSize().width();
-    QSize scaledImageSize(mMapImage->image().size() / mMapImage->scale() * tileScale);
-    mBoundingRect = QRectF(-mMapImage->tileToImageCoords(mHotSpot) / mMapImage->scale() * tileScale, scaledImageSize);
+    if (mMapImage) {
+        qreal tileScale = mRenderer->boundingRect(QRect(0,0,1,1)).width() / (qreal)mMapImage->tileSize().width();
+        QSize scaledImageSize(mMapImage->image().size() / mMapImage->scale() * tileScale);
+        mBoundingRect = QRectF(-mMapImage->tileToImageCoords(mHotSpot) / mMapImage->scale() * tileScale, scaledImageSize);
+    } else {
+        mBoundingRect = mRenderer->boundingRect(mMapInfo->bounds().translated(-mHotSpot), mLevel);
+    }
 }
 
-QPoint DnDItem::dropPosition()
+QPoint DnDItem::positionInMap() const
+{
+    return mPositionInMap;
+}
+
+QPoint DnDItem::dropPosition() const
 {
     return mPositionInMap - mHotSpot;
 }
 
 MapInfo *DnDItem::mapInfo()
 {
-    return mMapImage->mapInfo();
+    return mMapInfo;
 }
 
 /////
@@ -4391,12 +4543,14 @@ CellScene::CellScene(QObject *parent)
 
     // These signals are handled even when the document isn't current
     Preferences *prefs = Preferences::instance();
+    connect(prefs, &Preferences::showCellBorderChanged, this, &CellScene::showCellBorderChanged);
     connect(prefs, &Preferences::showCellGridChanged, this, &CellScene::setGridVisible);
     connect(prefs, &Preferences::highlightCurrentLevelChanged, this, &CellScene::setHighlightCurrentLevel);
     setGridVisible(prefs->showCellGrid());
     connect(prefs, &Preferences::gridColorChanged, this, [this]{this->update();});
     connect(prefs, &Preferences::showObjectsChanged, this, &CellScene::showObjectsChanged);
     connect(prefs, &Preferences::showObjectNamesChanged, this, &CellScene::showObjectNamesChanged);
+    connect(prefs, &Preferences::showInvisibleTilesChanged, this, &CellScene::showInvisibleTilesChanged);
 
     mHighlightCurrentLevel = prefs->highlightCurrentLevel();
 
@@ -4407,7 +4561,7 @@ CellScene::CellScene(QObject *parent)
     mMapBordersItem->setZValue(ZVALUE_GRID - 1);
 //    addItem(mMapBordersItem);
 
-
+    mWaterFlowOverlay->setZValue(ZVALUE_GRID - 1);
 }
 
 CellScene::~CellScene()
@@ -4471,6 +4625,17 @@ void CellScene::setTool(AbstractTool *tool)
         for (InGameMapFeatureItem* item : qAsConst(mFeatureItems)) {
             item->setEditable(false);
         }
+    }
+
+    for (SubMapItem *item : mSubMapItems) {
+        int currentLevel = mDocument->currentLevel();
+        bool visible = item->subMap()->isVisible()
+                && mDocument->isLotLevelVisible(currentLevel)
+                && SubMapTool::instance()->isCurrent();
+        if (mHighlightCurrentLevel) {
+            visible &= (item->subMap()->levelOffset() == currentLevel);
+        }
+        item->setVisible(visible);
     }
 
     // Restack ObjectItems and SubMapItems based on the current tool.
@@ -4686,7 +4851,7 @@ void CellScene::setGraphicsSceneZOrder()
     // and arranged from bottom to top by level (and object-group).
     // When the active tool affects SubMapItems, stack them above
     // ObjectItems and vice versa.
-    int numLevels = mMapComposite->maxLevel() + 1;
+    int numLevels = mMapComposite->maxLevel() - mMapComposite->minLevel() + 1;
     int lotSpaces = mSubMapItems.size() * numLevels;
     const ObjectGroupList &groups = world()->objectGroups();
     int objSpaces = mObjectItems.size() * groups.size() * numLevels;
@@ -4694,10 +4859,12 @@ void CellScene::setGraphicsSceneZOrder()
     if (mActiveTool && mActiveTool->affectsLots())
         z2 += objSpaces;
     int lotIndex = 0;
-    foreach (SubMapItem *item, mSubMapItems)
+    foreach (SubMapItem *item, mSubMapItems) {
         item->setZValue(z2
-                        + item->subMap()->levelOffset() * mSubMapItems.size()
-                        + lotIndex++);
+                        + (WORLD_GROUND_LEVEL + item->subMap()->levelOffset()) * mSubMapItems.size()
+                        + lotIndex);
+        lotIndex++;
+    }
 
     z2 = z;
     if (mActiveTool && mActiveTool->affectsObjects())
@@ -4710,9 +4877,10 @@ void CellScene::setGraphicsSceneZOrder()
             groupIndex = groups.size();
         }
         item->setZValue(z2
-                        + groups.size() * mObjectItems.size() * obj->level()
+                        + groups.size() * mObjectItems.size() * (WORLD_GROUND_LEVEL + obj->level())
                         + groupIndex * mObjectItems.size()
-                        + objectIndex++);
+                        + objectIndex);
+        objectIndex++;
     }
 
     mGridItem->setZValue(ZVALUE_GRID);
@@ -4829,6 +4997,40 @@ void CellScene::keyPressEvent(QKeyEvent *event)
     QGraphicsScene::keyPressEvent(event);
 }
 
+static int calculateLayerInsertIndex(MapLevel *mapLevel, TileLayer *layer, const QStringList &defaultLayerNames)
+{
+    int index1 = defaultLayerNames.indexOf(layer->name());
+    int minIndexAbove = -1;
+    for (int i = mapLevel->layerCount() - 1; i >= 0; i--) {
+        Layer *layer2 = mapLevel->layerAt(i);
+        int index = defaultLayerNames.indexOf(layer2->name());
+        if (index != -1 && index < index1) {
+            return i + 1;
+        }
+        if (index != -1 && index > index1) {
+            minIndexAbove = i;
+        }
+    }
+    if (minIndexAbove != -1) {
+        return minIndexAbove;
+    }
+#if 0
+    for (int i = index1 + 1; i < defaultLayerNames.size(); i++) {
+        int index = mapLevel->indexOfLayer(defaultLayerNames[i]);
+        if (index != -1) {
+            return index;
+        }
+    }
+    for (int i = index1 - 1; i >= 0; i--) {
+        int index = mapLevel->indexOfLayer(defaultLayerNames[i]);
+        if (index != -1) {
+            return index + 1;
+        }
+    }
+#endif
+    return mapLevel->layerCount();
+}
+
 void CellScene::loadMap()
 {
     mPendingDefer = true;
@@ -4892,24 +5094,24 @@ void CellScene::loadMap()
 #if 1
     // Add any missing default tile layers so the user can hide/show them in the Layers Dock.
     // FIXME: mMap is shared, is this safe?
-    for (int level = 0; level < MAX_WORLD_LEVELS; level++)
-    {
+    for (int level = MIN_WORLD_LEVEL; level <= MAX_WORLD_LEVEL; level++) {
         QStringList defaultLayerNames = BuildingEditor::BuildingTMX::instance()->tileLayerNamesForLevel(level);
         for (const QString& layerName : defaultLayerNames) {
             QString withoutPrefix = MapComposite::layerNameWithoutPrefix(layerName);
             QString withPrefix = QStringLiteral("%1_%2").arg(level).arg(withoutPrefix);
-            bool exists = false;
-            const QList<TileLayer*> tileLayers = mMap->tileLayers();
-            for (TileLayer* layer : tileLayers) {
-                if (layer->name() == withPrefix) {
-                    exists = true;
-                    break;
+            MapLevel *mapLevel = mMap->mapLevelForZ(level);
+            if (mapLevel) {
+                if (mapLevel->indexOfLayer(withoutPrefix, Layer::TileLayerType) != -1) {
+                    continue;
                 }
+            } else {
+                mapLevel = new MapLevel(mMap, level);
+                mMap->addMapLevel(mapLevel);
             }
-            if (exists)
-                continue;
-            TileLayer* layer = new TileLayer(withPrefix, 0, 0, 300, 300);
-            mMap->insertLayer(mMap->layerCount(), layer);
+            TileLayer* layer = new TileLayer(withoutPrefix, 0, 0, 300, 300);
+            layer->setLevel(level);
+            int index = calculateLayerInsertIndex(mapLevel, layer, defaultLayerNames);
+            mapLevel->insertLayer(index, layer);
         }
     }
 #endif
@@ -4925,7 +5127,9 @@ void CellScene::loadMap()
 
     mMapComposite = new MapComposite(mMapInfo, Map::LevelIsometric);
 
+    mRenderer->setMinLevel(mMapComposite->minLevel());
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
+    mRenderer->setShowInvisibleTiles(Preferences::instance()->showInvisibleTiles());
     connect(mMapComposite, &MapComposite::layerGroupAdded,
             this, &CellScene::layerGroupAdded);
     connect(mMapComposite, &MapComposite::layerGroupAdded,
@@ -4941,7 +5145,7 @@ void CellScene::loadMap()
         addItem(item);
         item->synchWithObject(); // for ObjectLabelItem
         mObjectItems += item;
-        mMapComposite->ensureMaxLevels(obj->level());
+        mMapComposite->checkMinMaxLevels(obj->level(), obj->level());
     }
 
     // FIXME: This creates a new CellRoadItem for every road in the world,
@@ -4994,6 +5198,7 @@ void CellScene::updateBordersItem()
     polygon << QPointF(mRenderer->tileToPixelCoords(rect.bottomRight()));
     polygon << QPointF(mRenderer->tileToPixelCoords(rect.bottomLeft()));
     mMapBordersItem->setPolygon(polygon);
+    mMapBordersItem->setVisible(Preferences::instance()->showCellBorder());
 }
 
 void CellScene::cellAdded(WorldCell *_cell)
@@ -5093,12 +5298,11 @@ void CellScene::lotLevelChanged(WorldCellLot *lot)
 //        item->subMapMoved(); // also called in synchLayerGroups()
 
         // Make sure there are enough layer-groups to display the submap
+        int minLevel = lot->level() + item->subMap()->minLevel();
         int maxLevel = lot->level() + item->subMap()->maxLevel();
-        if (maxLevel > mMapComposite->maxLevel()) {
-            mMapComposite->ensureMaxLevels(maxLevel);
-//            foreach (CompositeLayerGroup *layerGroup, mMapComposite->layerGroups())
-//                layerGroup->synch();
-        }
+        mMapComposite->checkMinMaxLevels(minLevel, maxLevel);
+//      foreach (CompositeLayerGroup *layerGroup, mMapComposite->layerGroups())
+//          layerGroup->synch();
 
         doLater(AllGroups | Bounds | Synch | ZOrder);
 
@@ -5457,6 +5661,11 @@ void CellScene::currentLevelChanged(int index)
     mGridItem->updateBoundingRect();
 }
 
+void CellScene::showCellBorderChanged(bool visible)
+{
+    mMapBordersItem->setVisible(visible);
+}
+
 void CellScene::selectedLotsChanged()
 {
     const QList<WorldCellLot*> &selection = document()->selectedLots();
@@ -5509,6 +5718,12 @@ void CellScene::showObjectNamesChanged(bool show)
     Q_UNUSED(show)
     foreach (ObjectItem *item, mObjectItems)
         item->synchWithObject(); // just synch the label
+}
+
+void CellScene::showInvisibleTilesChanged(bool show)
+{
+    mRenderer->setShowInvisibleTiles(show);
+    update();
 }
 
 void CellScene::setHighlightCurrentLevel(bool highlight)
@@ -5601,7 +5816,12 @@ void CellScene::handlePendingUpdates()
     if (mPendingFlags & LotVisibility) {
         foreach (SubMapItem *item, mSubMapItems) {
             WorldCellLot *lot = item->lot();
-            bool visible = mDocument->isLotLevelVisible(lot->level()) && item->subMap()->isVisible();
+            bool visible = mDocument->isLotLevelVisible(lot->level()) &&
+                    item->subMap()->isVisible() &&
+                    SubMapTool::instance()->isCurrent();
+            if (mHighlightCurrentLevel) {
+                visible &= (document()->currentLevel() == lot->level());
+            }
             item->setVisible(visible);
         }
     }
@@ -5724,7 +5944,8 @@ void CellScene::updateCurrentLevelHighlight()
 
         foreach (SubMapItem *item, mSubMapItems)
             item->setVisible(item->subMap()->isVisible() &&
-                             mDocument->isLotLevelVisible(item->subMap()->levelOffset()));
+                             mDocument->isLotLevelVisible(item->subMap()->levelOffset()) &&
+                             SubMapTool::instance()->isCurrent());
 
         foreach (ObjectItem *item, mObjectItems)
             item->setVisible(shouldObjectItemBeVisible(item));
@@ -5755,7 +5976,8 @@ void CellScene::updateCurrentLevelHighlight()
     foreach (SubMapItem *item, mSubMapItems) {
         bool visible = item->subMap()->isVisible()
                 && (item->subMap()->levelOffset() == currentLevel)
-                && mDocument->isLotLevelVisible(currentLevel);
+                && mDocument->isLotLevelVisible(currentLevel)
+                && SubMapTool::instance()->isCurrent();
         item->setVisible(visible);
     }
     foreach (ObjectItem *item, mObjectItems) {
@@ -5919,7 +6141,7 @@ void CellScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 void CellScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 {
     int level = document()->currentLevel();
-    if (level < 0) {
+    if (level < MIN_WORLD_LEVEL || level > MAX_WORLD_LEVEL) {
         event->ignore();
         return;
     }
@@ -5930,11 +6152,11 @@ void CellScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
         if (!info.isFile()) continue;
         if (info.suffix() != QLatin1String("tmx") &&
                 info.suffix() != QLatin1String("tbx")) continue;
-        if (!MapManager::instance()->mapInfo(info.canonicalFilePath()))
+        MapInfo *mapInfo = MapManager::instance()->mapInfo(info.canonicalFilePath());
+        if (mapInfo == nullptr)
             continue;
 
-        QString path = info.canonicalFilePath();
-        mDnDItem = new DnDItem(path, mRenderer, level);
+        mDnDItem = new DnDItem(mapInfo, mRenderer, level);
         QPoint tilePos = mRenderer->pixelToTileCoords(event->scenePos(), level).toPoint();
         mDnDItem->setTilePosition(tilePos);
         addItem(mDnDItem);
@@ -5975,6 +6197,45 @@ void CellScene::dropEvent(QGraphicsSceneDragDropEvent *event)
     if (mDnDItem) {
         QPoint dropPos = mDnDItem->dropPosition();
         int level = document()->currentLevel();
+#if 1
+        QFileInfo fileInfo(mDnDItem->mapInfo()->path());
+        if (fileInfo.fileName().startsWith(QStringLiteral("ba_"))) {
+            // Check for dropping a basement access lot onto a Basement object.
+            auto& objects = document()->cell()->objects();
+            WorldCellObject *basementObject = nullptr;
+            for (int i = objects.size() - 1; i >= 0; i--) {
+                WorldCellObject *object = objects.at(i);
+                if (object->level() != level) {
+                    continue;
+                }
+                if (object->isBasement() == false) {
+                    continue;
+                }
+                if (object->bounds().contains(mDnDItem->positionInMap()) == false) {
+                    continue;
+                }
+                basementObject = object;
+                break;
+            }
+            if (basementObject != nullptr) {
+                if (PropertyDef *pd_Access = world()->propertyDefinition(QStringLiteral("Access"))) {
+                    worldDocument()->undoStack()->beginMacro(QStringLiteral("Assign Basement Access"));
+                    Property *p_Access = basementObject->properties().find(pd_Access);
+                    if (p_Access == nullptr) {
+                        worldDocument()->addProperty(basementObject, pd_Access->mName);
+                    }
+                    p_Access = basementObject->properties().find(pd_Access);
+                    worldDocument()->setPropertyValue(basementObject, p_Access, fileInfo.completeBaseName());
+                    worldDocument()->undoStack()->endMacro();
+                }
+                Preferences::instance()->setHighlightCurrentLevel(mWasHighlightCurrentLevel);
+                delete mDnDItem;
+                mDnDItem = nullptr;
+                event->accept();
+                return;
+            }
+        }
+#endif
         WorldCellLot *lot = new WorldCellLot(cell(), mDnDItem->mapInfo()->path(),
                                              dropPos.x(), dropPos.y(), level,
                                              mDnDItem->mapInfo()->width(),
@@ -6280,10 +6541,9 @@ void AdjacentMap::lotLevelChanged(WorldCellLot *lot)
         mLotToMC[lot]->setLevel(lot->level());
 
         // Make sure there are enough layer-groups to display the submap
-        int maxLevel = lot->level() +  mLotToMC[lot]->maxLevel();
-        if (maxLevel > mMapComposite->maxLevel()) {
-            mMapComposite->ensureMaxLevels(maxLevel);
-        }
+        int minLevel = lot->level() + mLotToMC[lot]->minLevel();
+        int maxLevel = lot->level() + mLotToMC[lot]->maxLevel();
+        mMapComposite->checkMinMaxLevels(minLevel, maxLevel);
 
         scene()->mapCompositeNeedsSynch();
     }
@@ -6500,7 +6760,7 @@ void AdjacentMap::mapLoaded(MapInfo *mapInfo)
 //            scene()->addItem(item);
             item->synchWithObject(); // for ObjectLabelItem
             mObjectItems += item;
-            mMapComposite->ensureMaxLevels(obj->level());
+            mMapComposite->checkMinMaxLevels(obj->level(), obj->level());
         }
 
         qDeleteAll(mInGameMapFeatureItems);
@@ -6644,7 +6904,8 @@ QRectF AdjacentMap::lotSceneBounds(WorldCellLot *lot)
 
 void AdjacentMap::setZOrder()
 {
-    int z = scene()->mapComposite()->maxLevel() + 1;
+    int numLevels = scene()->mapComposite()->maxLevel() - scene()->mapComposite()->minLevel() + 1;
+    int z = numLevels + 1;
     mObjectItemParent->setZValue(z);
     mInGameMapFeatureParent->setZValue(z + 1);
 
@@ -6654,7 +6915,7 @@ void AdjacentMap::setZOrder()
         WorldCellObject *obj = item->object();
         int groupIndex = groups.indexOf(obj->group());
         item->setZValue(0
-                        + groups.size() * mObjectItems.size() * obj->level()
+                        + groups.size() * mObjectItems.size() * (WORLD_GROUND_LEVEL + obj->level())
                         + groupIndex * mObjectItems.size()
                         + objectIndex++);
     }

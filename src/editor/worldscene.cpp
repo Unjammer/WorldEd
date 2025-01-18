@@ -193,7 +193,6 @@ WorldScene::WorldScene(WorldDocument *worldDoc, QObject *parent)
     connect(prefs, &Preferences::showZombieSpawnImageChanged, this, &WorldScene::setShowZombieSpawnImage);
     connect(prefs, &Preferences::zombieSpawnImageOpacityChanged, this, &WorldScene::zombieSpawnImageOpacityChanged);
     connect(prefs, &Preferences::showZonesInWorldViewChanged, this, &WorldScene::setShowZonesInWorldView);
-    connect(prefs, &Preferences::showZonesWorldInWorldViewChanged, this, &WorldScene::setShowZonesWorldInWorldView);
     connect(prefs, &Preferences::showOtherWorldsChanged, this, &WorldScene::setShowOtherWorlds);
     connect(prefs, &Preferences::worldThumbnailsChanged,
             this, &WorldScene::worldThumbnailsChanged);
@@ -202,7 +201,7 @@ WorldScene::WorldScene(WorldDocument *worldDoc, QObject *parent)
 
     foreach (WorldBMP *bmp, world()->bmps()) {
         WorldBMPItem *item = new WorldBMPItem(this, bmp);
-        item->setVisible(prefs->showBMPs() && (!prefs->showZonesInWorldView() || !prefs->showZonesWorldInWorldView()));
+        item->setVisible(prefs->showBMPs() && !prefs->showZonesInWorldView());
         addItem(item);
         mBMPItems += item;
     }
@@ -220,18 +219,12 @@ WorldScene::WorldScene(WorldDocument *worldDoc, QObject *parent)
             this, &WorldScene::mapImageChanged);
 
     if (Preferences::instance()->worldThumbnails()) {
-        //TIM BAKER 07032023
-        //PROGRESS progress(QStringLiteral("Loading thumbnails"));
         PROGRESS_HIDER hider;
         LoadThumbnailsDialog dialog(this, MainWindow::instance());
         dialog.show();
-
         int numThumbnails = mPendingThumbnails.size();
         handlePendingThumbnails();
         while (mPendingThumbnails.isEmpty() == false) {
-            //TIM BAKER 07032023
-            //PROGRESS progress(QStringLiteral("Loading thumbnails %1 / %2").arg(numThumbnails - mPendingThumbnails.size()).arg(numThumbnails));
-            //qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
             dialog.setPrompt(QStringLiteral("Loading thumbnails %1 / %2").arg(numThumbnails - mPendingThumbnails.size()).arg(numThumbnails));
             qApp->processEvents(QEventLoop::AllEvents);
         }
@@ -368,8 +361,6 @@ void WorldScene::pasteCellsFromClipboard()
     ToolManager::instance()->selectTool(mPasteCellsTool);
     //    mActiveTool = mPasteCellsTool;
 }
-
-//TIM BAKER 07032023
 
 void WorldScene::cancelLoadingThumbnails()
 {
@@ -588,8 +579,6 @@ void WorldScene::setShowBMPs(bool show)
 {
     if (Preferences::instance()->showZonesInWorldView()) {
         show = false;
-    } else if (Preferences::instance()->showZonesWorldInWorldView()) {
-        show = true;
     }
     for (WorldBMPItem *bmpItem : mBMPItems) {
         bmpItem->setVisible(show);
@@ -629,18 +618,10 @@ void WorldScene::zombieSpawnImageOpacityChanged(qreal opacity)
     mZombieSpawnImageItem->update();
 }
 
-
 void WorldScene::setShowZonesInWorldView(bool show)
 {
     setShowBMPs(Preferences::instance()->showBMPs());
-
     // update() to redisplay WorldCells also.
-    update();
-}
-
-void WorldScene::setShowZonesWorldInWorldView(bool show)
-{
-    setShowBMPs(Preferences::instance()->showBMPs());
     update();
 }
 
@@ -660,12 +641,9 @@ void WorldScene::selectedRoadsChanged()
 
     bool editable = WorldEditRoadTool::instance()->isCurrent();
     foreach (WorldRoadItem *item, items - mSelectedRoadItems) {
-        if (item != NULL)
-        {
-            item->setSelected(true);
-            item->setEditable(editable);
-            item->setZValue(ZVALUE_ROADITEM_SELECTED);
-        }
+        item->setSelected(true);
+        item->setEditable(editable);
+        item->setZValue(ZVALUE_ROADITEM_SELECTED);
     }
 
     mSelectedRoadItems = items;
@@ -814,17 +792,12 @@ void WorldScene::worldThumbnailsChanged(bool thumbs)
     if (thumbs) {
         foreach (WorldCellItem *item, mCellItems)
             mPendingThumbnails += item;
-        //TIM BAKER 07032023
-        //PROGRESS progress(QStringLiteral("Loading thumbnails"));
+
         LoadThumbnailsDialog dialog(this, MainWindow::instance());
         dialog.show();
-
         int numThumbnails = mPendingThumbnails.size();
         handlePendingThumbnails();
         while (mPendingThumbnails.isEmpty() == false) {
-            //TIM BAKER 07032023
-            //PROGRESS progress(QStringLiteral("Loading thumbnails %1 / %2").arg(numThumbnails - mPendingThumbnails.size()).arg(numThumbnails));
-            //qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
             dialog.setPrompt(QStringLiteral("Loading thumbnails %1 / %2").arg(numThumbnails - mPendingThumbnails.size()).arg(numThumbnails));
             qApp->processEvents(QEventLoop::AllEvents);
         }
@@ -1299,7 +1272,7 @@ static QPolygonF createPolylineOutline(WorldScene *scene, WorldCellObject *objec
 
 void WorldCellItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    if (Preferences::instance()->showZonesInWorldView() || Preferences::instance()->showZonesWorldInWorldView()) {
+    if (Preferences::instance()->showZonesInWorldView()) {
         QPen pen(Qt::black);
         pen.setCosmetic(((WorldView*) mScene->views().at(0))->zoomable()->scale() >= 1.0);
         painter->setPen(pen);
@@ -1385,7 +1358,7 @@ void WorldCellItem::objectPointsChanged(int index)
 {
     WorldCellObject *object = cell()->objects().value(index);
     mPolylineOutlines.remove(object);
-    if (Preferences::instance()->showZonesInWorldView() || Preferences::instance()->showZonesWorldInWorldView()) {
+    if (Preferences::instance()->showZonesInWorldView()) {
         update();
     }
 }
@@ -1714,7 +1687,6 @@ void WorldCoordItem::paint(QPainter *painter,
             else {
                 painter->setBrush(Qt::lightGray);
             }
-            
             painter->drawRect(r);
 
             painter->drawText(mScene->boundingRect(x, y), Qt::AlignHCenter | Qt::AlignVCenter, text);
@@ -1821,16 +1793,11 @@ void WorldRoadItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
-    QColor c = Qt::gray;
+    QColor c = Qt::blue;
     if (mSelected)
         c = Qt::green;
     if (mEditable)
         c = Qt::yellow;
-
-
-    painter->setPen(Qt::darkRed);
-
-    painter->drawPath(shape());
     painter->fillPath(shape(), c);
 }
 

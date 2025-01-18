@@ -17,7 +17,6 @@
 
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#define ROAD_UI
 
 #include <QMainWindow>
 #include <QSettings>
@@ -59,7 +58,7 @@ public:
     DocumentManager *docman() const;
 
     bool saveFile(const QString &fileName);
-    bool openFile(const QString &fileName, int chrono);
+    bool openFile(const QString &fileName);
 
     void openLastFiles();
 
@@ -100,12 +99,18 @@ public slots:
 
     void WriteSpawnPoints();
     void WriteWorldObjects();
+    void WriteRoomTones();
 
     void updateWindowTitle();
 
     void generateLotsAll();
     void generateLotsSelected();
+    void generateLotsAll8x8();
+    void generateLotsSelected8x8();
     void generateLotSettingsChanged();
+
+    void overwriteSpawnMap_AllCells_256();
+    void overwriteSpawnMap_SelectedCells_256();
 
     void BMPToTMXAll();
     void BMPToTMXSelected();
@@ -148,11 +153,11 @@ public slots:
     void removeInGameMapHole();
     void removeInGameMapPoint();
     void readInGameMapFeaturesXML();
-    void writeInGameMapFeaturesXML();
-
-    //TIM BAKER 07032023
-    void overwriteInGameMapFeaturesXML();
-
+    void writeInGameMapFeaturesXML_300();
+    void writeInGameMapFeaturesXML_256();
+    void overwriteInGameMapFeaturesXML_300();
+    void overwriteInGameMapFeaturesXML_256();
+    void createInGameMapImage();
     void creaeInGameMapImagePyramid();
 
     void setStatusBarCoords(int x, int y);
@@ -169,10 +174,12 @@ public slots:
     void FromToSelected();
 
     void BuildingsToPNG();
+    void ZonesToPNG();
 
     void lootInspector();
-
+    void BiomeMapGenerator();
     void readOldWaterDotLua();
+    void showAboutDialog();
 
 private:
     void FromToAux(bool selectedOnly);
@@ -194,6 +201,8 @@ private:
     bool canAddInGameMapHole();
     bool canRemoveInGameMapHole();
     bool canConvertToInGameMapPolygon();
+    void writeInGameMapFeaturesXML(bool b256);
+    void overwriteInGameMapFeaturesXML(bool b256);
 
     struct ViewHint
     {
@@ -220,17 +229,16 @@ private:
     PropertiesDock *mPropertiesDock;
     SearchDock* mSearchDock;
     InGameMapDock* mInGameMapDock;
-#ifdef ROAD_UI
+//#ifdef ROAD_UI
     RoadsDock *mRoadsDock;
-#endif
+//#endif
     Document *mCurrentDocument;
     QComboBox *mZoomComboBox;
     QMenu *mCurrentLevelMenu;
     QMenu *mObjectGroupMenu;
     Zoomable *mZoomable;
-    QSettings mSettings;
     LotPackWindow *mLotPackWindow;
-
+    QSettings mSettings;
     static MainWindow *mInstance;
 };
 

@@ -21,8 +21,8 @@ win32 {
 
 TARGET = PZWorldEd
 TEMPLATE = app
-target.path = $${PREFIX}/bin
-INSTALLS += target
+#target.path = $${PREFIX}/bin
+#INSTALLS += target
 win32 {
     DESTDIR = ../..
 } else {
@@ -60,15 +60,19 @@ RCC_DIR = .rcc
 OBJECTS_DIR = .obj
 
 SOURCES += main.cpp\
+    ImageProcessor.cpp \
+    biomemapgeneratorDialog.cpp \
+    exportlotsprogressdialog.cpp \
     generatelotsfailuredialog.cpp \
-	Logger.cpp \
-	loadthumbnailsdialog.cpp \
-	    savescreenshot.cpp \
+    loadthumbnailsdialog.cpp \
+    logger.cpp \
+    lotfilesmanager256.cpp \
         mainwindow.cpp \
     InGameMap/clipper.cpp \
     InGameMap/ingamemapcell.cpp \
     InGameMap/ingamemapdock.cpp \
     InGameMap/ingamemapfeaturegenerator.cpp \
+    InGameMap/ingamemapimagedialog.cpp \
     InGameMap/ingamemapimagepyramidwindow.cpp \
     InGameMap/ingamemappropertiesform.cpp \
     InGameMap/ingamemappropertydialog.cpp \
@@ -77,6 +81,11 @@ SOURCES += main.cpp\
     InGameMap/ingamemapundo.cpp \
     InGameMap/ingamemapwriter.cpp \
     InGameMap/ingamemapwriterbinary.cpp \
+    navigation/chunkdatafile256.cpp \
+    navigation/isochunk256.cpp \
+    navigation/isogridsquare256.cpp \
+    pngzonesdialog.cpp \
+    tiledeftextfile.cpp \
     tilesetstxtfile.cpp \
     worldview.cpp \
     worldscene.cpp \
@@ -97,6 +106,7 @@ SOURCES += main.cpp\
     mapmanager.cpp \
     basegraphicsview.cpp \
     progress.cpp \
+    writeroomtonesdialog.cpp \
     zoomable.cpp \
     scenetools.cpp \
     worldwriter.cpp \
@@ -169,13 +179,17 @@ SOURCES += main.cpp\
     defaultsfile.cpp \
     BuildingEditor/roofhiding.cpp \
     waterflow.cpp
+
 HEADERS  += mainwindow.h \
+    ImageProcessor.h \
+    biomemapgeneratorDialog.h \
+    exportlotsprogressdialog.h \
     generatelotsfailuredialog.h \
-	Logger.h \
     InGameMap/clipper.hpp \
     InGameMap/ingamemapcell.h \
     InGameMap/ingamemapdock.h \
     InGameMap/ingamemapfeaturegenerator.h \
+    InGameMap/ingamemapimagedialog.h \
     InGameMap/ingamemapimagepyramidwindow.h \
     InGameMap/ingamemappropertiesform.h \
     InGameMap/ingamemappropertydialog.h \
@@ -184,9 +198,16 @@ HEADERS  += mainwindow.h \
     InGameMap/ingamemapundo.h \
     InGameMap/ingamemapwriter.h \
     InGameMap/ingamemapwriterbinary.h \
-	savescreenshot.h \
-	loadthumbnailsdialog.h \
+    loadthumbnailsdialog.h \
+    logger.h \
+    lotfilesmanager256.h \
+    navigation/chunkdatafile256.h \
+    navigation/isochunk256.h \
+    navigation/isogridsquare256.h \
+    pngzonesdialog.h \
+    tiledeftextfile.h \
     tilesetstxtfile.h \
+    worldconstants.h \
     worldview.h \
     worldscene.h \
     world.h \
@@ -206,6 +227,7 @@ HEADERS  += mainwindow.h \
     mapmanager.h \
     basegraphicsview.h \
     progress.h \
+    writeroomtonesdialog.h \
     zoomable.h \
     scenetools.h \
     worldwriter.h \
@@ -277,12 +299,17 @@ HEADERS  += mainwindow.h \
     defaultsfile.h \
     BuildingEditor/roofhiding.h \
     waterflow.h
+
 FORMS    += mainwindow.ui \
+    biomemapgenerator.ui \
+    exportlotsprogressdialog.ui \
     generatelotsfailuredialog.ui \
+    InGameMap/ingamemapimagedialog.ui \
     InGameMap/ingamemapimagepyramidwindow.ui \
     InGameMap/ingamemappropertiesform.ui \
     InGameMap/ingamemappropertydialog.ui \
-	loadthumbnailsdialog.ui \
+    loadthumbnailsdialog.ui \
+    pngzonesdialog.ui \
     propertiesview.ui \
     propertiesdialog.ui \
     templatesdialog.ui \
@@ -301,13 +328,16 @@ FORMS    += mainwindow.ui \
     gotodialog.ui \
     spawntooldialog.ui \
     propertyenumdialog.ui \
+    writeroomtonesdialog.ui \
     writespawnpointsdialog.ui \
     pngbuildingdialog.ui \
     lootwindow.ui \
     writeworldobjectsdialog.ui \
     tmxtobmpdialog.ui \
     searchdock.ui
-#OTHER_FILES +=
+
+OTHER_FILES +=
+
 RESOURCES += \
     editor.qrc
 
@@ -331,6 +361,7 @@ configTxtFiles.path = $${CONFIG_PREFIX}
 configTxtFiles.files = \
     $${top_srcdir}/Blends.txt \
     $${top_srcdir}/MapBaseXML.txt \
+    $${top_srcdir}/MapToPNG.txt \
     $${top_srcdir}/Rules.txt \
     $${top_srcdir}/WorldDefaults.txt
 INSTALLS += configTxtFiles

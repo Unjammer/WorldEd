@@ -54,7 +54,9 @@ inline QDebug noise() { return QDebug(QtDebugMsg); }
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-const int IMAGE_WIDTH = 512;
+//const int IMAGE_WIDTH = 512;
+int IMAGE_WIDTH = Preferences::instance()->thumbWidth();
+
 
 MapImageManager *MapImageManager::mInstance = NULL;
 
@@ -272,10 +274,8 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
         return image;
     }
 #endif
-
-    int IMGWIDTH = Preferences::instance()->thumbWidth();
-
-
+    IMAGE_WIDTH = Preferences::instance()->thumbWidth();
+    if (IMAGE_WIDTH == NULL) IMAGE_WIDTH = 512;
     QFileInfo fileInfo(mapFilePath);
     QFileInfo imageInfo = imageFileInfo(mapFilePath);
     QFileInfo imageDataInfo = imageDataFileInfo(imageInfo);
@@ -284,8 +284,7 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
         if (!reader.size().isValid())
             QMessageBox::warning(MainWindow::instance(), tr("Error Loading Image"),
                                  tr("An error occurred trying to read a map thumbnail image.\n") + imageInfo.absoluteFilePath());
-        //if (reader.size().width() == IMAGE_WIDTH) {
-        if (reader.size().width() == IMGWIDTH) {
+        if (reader.size().width() == IMAGE_WIDTH) {
             ImageData data = readImageData(imageDataInfo);
             // If the image was originally created with some tilesets missing,
             // try to recreate the image in case those tileset issues were
@@ -345,8 +344,7 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
         return ImageData();
     }
 
-   // qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
-    qreal scale = IMGWIDTH / qreal(mapSize.width());
+    qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
     mapSize *= scale;
 
     ImageData data;
@@ -1189,14 +1187,19 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
         return MapImageData();
     }
 
+    renderer->setShowInvisibleTiles(false);
     renderer->mAbortDrawing = workerThread()->var();
 
     // Don't draw empty levels
+    int minLevel = 0;
     int maxLevel = 0;
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
-        if (!layerGroup->bounds().isEmpty())
+        if (!layerGroup->bounds().isEmpty()) {
+            minLevel = std::min(minLevel, layerGroup->level());
             maxLevel = layerGroup->level();
+        }
     }
+    renderer->setMinLevel(minLevel);
     renderer->setMaxLevel(maxLevel);
 
     foreach (MapComposite *mc, mapComposite->maps())
@@ -1208,10 +1211,7 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
     if (mapSize.isEmpty())
         return MapImageData();
 
-    int IMGWIDTH = Preferences::instance()->thumbWidth();
-
-    //qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
-    qreal scale = IMGWIDTH / qreal(mapSize.width());
+    qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
     mapSize *= scale;
 
     QImage image(mapSize, QImage::Format_ARGB32);
