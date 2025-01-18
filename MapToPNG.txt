@@ -1,0 +1,181 @@
+version = 1
+
+settings
+{
+}
+
+rule
+{
+    name = DarkGrass
+    tileset = contains blends_natural_01
+    tileRange = 16 23
+    color = 90 100 35
+}
+
+rule
+{
+    name = MediumGrass
+    tileset = contains blends_natural_01
+    tileRange = 32 39
+    color = 117 117 47
+}
+
+rule
+{
+    name = LightGrass
+    tileset = contains blends_natural_01
+    tileRange = 48 55
+    color = 145 135 60
+}
+
+rule
+{
+    name = Sand
+    tileset = contains blends_natural_01
+    tileRange = 0 7
+    color = 210 200 160
+}
+
+rule
+{
+    name = Sand
+    tileset = startsWith floors_exterior_natural_01
+    tileRange = 24 35
+    color = 210 200 160
+}
+
+rule
+{
+    name = LightGravel
+    tileset = contains blends_street_01
+    tileRange = 48 55
+    color = 165 160 140
+}
+
+rule
+{
+    name = DarkAsphalt
+    tileset = contains blends_street_01
+    tileRange = 80 87
+    color = 100 100 100
+}
+
+rule
+{
+    name = MediumAsphalt
+    tileset = contains blends_street_01
+    tileRange = 96 103
+    color = 120 120 120
+}
+
+rule
+{
+    name = GravelDirt
+    tileset = contains floors_exterior_natural_01
+    tileRange = 12 13
+    color = 140 70 15
+}
+
+rule
+{
+    name = Dirt
+    tileset = contains blends_natural_01
+    tileRange = 64 71
+    color = 120 70 20
+}
+
+rule
+{
+    name = DirtAndGrass
+    tileset = contains blends_natural_01
+    tileRange = 80 87
+    color = 80 55 20
+}
+
+rule
+{
+    name = DarkPothole
+    tileset = equals blends_street_01
+    tileRange = 0 0
+    color = 110 100 100
+}
+
+rule
+{
+    name = LightPothole
+    tileset = contains blends_street_01
+    tileRange = 16 21
+    color = 130 120 120
+}
+
+rule
+{
+    name = Water
+    tileset = contains blends_natural_02
+    tileRange = 0 7
+    color = 0 138 255
+}
+
+rule
+{
+    name = Carpentry
+    tileset = contains carpentry_02
+    tileRange = 12 56
+    color = 152 126 102
+}
+
+rule
+{
+    name = Trees
+    tileset = contains trees_
+    color = 38 53 22
+}
+
+rule
+{
+    name = JumboTree
+    tileset = contains jumbo
+    color = 38 53 22
+}
+
+rule
+{
+    name = Farm
+    tileset = contains vegetation_farm
+    color = 218 165 32
+}
+
+rule
+{
+    name = Railway
+    tileset = contains _railroad
+    color = 73 58 43
+}
+
+rule
+{
+    name = Fencing
+    tileset = contains fencing
+    color = 82 90 83
+}
+
+rule
+{
+    name = Traffic
+    tileset = contains traffic
+    color = 204 204 204
+}
+
+rule
+{
+    name = StreetDecoration
+    tileset = contains street_decoration_
+    color = 59 59 59
+}
+
+rule
+{
+    name = StreetCurbs
+    tileset = contains street_curbs_
+    color = 59 59 59
+}

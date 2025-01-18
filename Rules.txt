@@ -2,6 +2,100 @@ version = 1
 
 alias
 {
+    name = Ash
+    tiles = [
+        floors_burnt_01_1
+        floors_burnt_01_2
+    ]
+}
+alias
+{
+    name = scorchedEarth
+    tiles = floors_burnt_01_0
+}
+alias
+{
+    name = CharredEarth
+    tiles = floors_burnt_01_8
+}
+alias
+{
+    name = CharredEarth_n
+    tiles = [
+        floors_burnt_01_16
+        floors_burnt_01_20
+    ]
+}
+alias
+{
+    name = CharredEarth_e
+    tiles = [
+        floors_burnt_01_18
+        floors_burnt_01_22
+    ]
+}
+alias
+{
+    name = CharredEarth_s
+    tiles = [
+        floors_burnt_01_19
+        floors_burnt_01_23
+    ]
+}
+alias
+{
+    name = CharredEarth_w
+    tiles = [
+        floors_burnt_01_17
+        floors_burnt_01_21
+    ]
+}
+alias
+{
+    name = CharredEarthblends
+    tiles = [
+        floors_burnt_01_9
+        floors_burnt_01_10
+        floors_burnt_01_11
+        floors_burnt_01_12
+        floors_burnt_01_16
+        floors_burnt_01_20
+        floors_burnt_01_17
+        floors_burnt_01_21
+        floors_burnt_01_19
+        floors_burnt_01_23
+        floors_burnt_01_18
+        floors_burnt_01_22
+    ]
+}
+alias
+{
+    name = rockssmall
+    tiles = floors_exterior_natural_01_8
+}
+alias
+{
+    name = rocksmedium
+    tiles = floors_exterior_natural_01_9
+}
+alias
+{
+    name = rockslarge
+    tiles = floors_exterior_natural_01_10
+}
+alias
+{
+    name = dirtvertical
+    tiles = floors_exterior_natural_01_16
+}
+alias
+{
+    name = dirthorizontal
+    tiles = floors_exterior_natural_01_17
+}
+
+alias
+{
     name = lightgrass_n
     tiles = [
         blends_natural_01_56
@@ -769,7 +863,40 @@ rule
 }
 rule
 {
-    label = Grass (all types)
+    label = Dark short grass
+    bitmap = 1
+    color = 0 250 0
+    tiles = [
+        darkshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = Light short grass
+    bitmap = 1
+    color = 0 250 0
+    tiles = [
+        lightshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 145 135 60
+}
+rule
+{
+    label = Medium short grass
+    bitmap = 1
+    color = 0 250 0
+    tiles = [
+        medshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = Dark long grass
     bitmap = 1
     color = 0 255 0
     tiles = [
@@ -817,6 +944,7 @@ rule
 }
 rule
 {
+    label = Medium long grass
     bitmap = 1
     color = 0 255 0
     tiles = [
@@ -1014,4 +1142,343 @@ rule
     ]
     layer = 0_Vegetation
     condition = 145 135 60
+}
+
+rule
+{
+    label = Dense Bushes & Grass (dark)
+    bitmap = 1
+    color = 200 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        darklonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = Bushes & Grass (dark)
+    bitmap = 1
+    color = 150 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        darklonggrass
+        darkmedgrass
+        darkshortgrass
+	darklonggrass
+        darklonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = Sparse Bushes & Grass (dark)
+    bitmap = 1
+    color = 100 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        darklonggrass
+        darklonggrass
+        darkmedgrass
+        darkshortgrass
+	darklonggrass
+        darklonggrass
+        darkmedgrass
+        darkshortgrass
+	darklonggrass
+        darklonggrass
+        darkmedgrass
+        darkshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = Dense Bushes & Grass (medium)
+    bitmap = 1
+    color = 200 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        medlonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = Bushes & Grass (medium)
+    bitmap = 1
+    color = 150 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        medlonggrass
+        medlonggrass
+        medmedgrass
+        medshortgrass
+	medlonggrass
+        medlonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = Sparse Bushes & Grass (medium)
+    bitmap = 1
+    color = 100 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+	medlonggrass
+        medlonggrass
+        medmedgrass
+        medshortgrass
+	medlonggrass
+        medlonggrass
+        medmedgrass
+        medshortgrass
+	medlonggrass
+        medlonggrass
+        medmedgrass
+        medshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = Dense Bushes & Grass (light)
+    bitmap = 1
+    color = 200 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        lightlonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 145 135 60
+}
+rule
+{
+    label = Bushes & Grass (light)
+    bitmap = 1
+    color = 150 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        lightlonggrass
+        lightlonggrass
+        lightmedgrass
+        lightshortgrass
+        lightlonggrass
+        lightlonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 145 135 60
+}
+rule
+{
+    label = Sparse Bushes & Grass (light)
+    bitmap = 1
+    color = 100 0 200
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+        vegetation_foliage_01_12
+        vegetation_foliage_01_13
+        vegetation_foliage_01_14
+        lightlonggrass
+        lightlonggrass
+        lightmedgrass
+        lightshortgrass
+        lightlonggrass
+        lightlonggrass
+        lightmedgrass
+        lightshortgrass
+        lightlonggrass
+        lightlonggrass
+        lightmedgrass
+        lightshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 145 135 60
+}
+rule
+{
+    label = Farm Corn (dead)
+    bitmap = 1
+    color = 255 128 0
+    tiles = [
+        vegetation_farm_01_32
+        vegetation_farm_01_33
+        vegetation_farm_01_34
+        vegetation_farm_01_35
+        vegetation_farm_01_36
+        vegetation_farm_01_37
+        vegetation_farm_01_38
+        vegetation_farm_01_39
+    ]
+    layer = 0_Vegetation
+}
+rule
+{
+    label = Farm Corn 2 (dead)
+    bitmap = 1
+    color = 220 100 0
+    tiles = [
+        vegetation_farm_01_40
+        vegetation_farm_01_41
+        vegetation_farm_01_42
+        vegetation_farm_01_43
+        vegetation_farm_01_44
+        vegetation_farm_01_45
+        vegetation_farm_01_46
+        vegetation_farm_01_47
+    ]
+    layer = 0_Vegetation
+}
+rule
+{
+    label = BurnedTrees + Dark grass
+    bitmap = 1
+    color = 80 20 0
+    tiles = [
+        fencing_burnt_01_16
+        fencing_burnt_01_17
+        fencing_burnt_01_18
+        fencing_burnt_01_19
+	darklonggrass
+        darklonggrass
+        darkmedgrass
+        darkshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = BurnedTrees + Medium grass
+    bitmap = 1
+    color = 80 20 0
+    tiles = [
+        fencing_burnt_01_16
+        fencing_burnt_01_17
+        fencing_burnt_01_18
+        fencing_burnt_01_19
+	medlonggrass
+        medlonggrass
+        medmedgrass
+        medshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = BurnedTrees + Light grass
+    bitmap = 1
+    color = 80 20 0
+    tiles = [
+        fencing_burnt_01_16
+        fencing_burnt_01_17
+        fencing_burnt_01_18
+        fencing_burnt_01_19
+	lightlonggrass
+        lightlonggrass
+        lightmedgrass
+        lightshortgrass
+    ]
+    layer = 0_Vegetation
+    condition = 145 135 60
+}
+
+rule
+{
+    label = Rockssmall
+    bitmap = 0
+    color = 110 100 60
+    tiles = rockssmall
+    layer = 0_Floor
+}
+rule
+{
+    label = Rocksmedium
+    bitmap = 0
+    color = 130 120 80
+    tiles = rocksmedium
+    layer = 0_Floor
+}
+rule
+{
+    label = Rockslarge
+    bitmap = 0
+    color = 150 135 90
+    tiles = rockslarge
+    layer = 0_Floor
+}
+rule
+{
+    label = Dirtvertical
+    bitmap = 0
+    color = 120 100 75
+    tiles = dirtvertical
+    layer = 0_Floor
+}
+rule
+{
+    label = Dirthorizontal
+    bitmap = 0
+    color = 120 110 95
+    tiles = dirthorizontal
+    layer = 0_Floor
 }

@@ -12,13 +12,74 @@ enum
     multi = false
 }
 
+enum
+{
+    name = Professions
+    values = [
+    accountant
+    bookkeeper
+    burglar
+    cashier
+    chef
+    constructionworker
+    cook
+    customerservice
+    doctor
+    drugdealer
+    farmer
+    fastfoodcook
+    fireofficer
+    itworker
+    janitor
+    militaryofficer
+    militarysoldier
+    nurse
+    officeworker
+    parkranger
+    policeofficer
+    salesperson
+    secretary
+    securityguard
+    shopclerk
+    teacher
+    truckdriver
+    unemployed
+    waiter
+    ]
+    multi = false
+}
+
+enum
+{
+    name = DirectionBasement
+    values = [
+        N
+        W
+    ]
+    multi = false
+}
 property
 {
     name = Direction
     default = N
     enum = Direction
 }
-
+property
+{
+    name = Professions
+    default = unemployed
+    enum = Professions
+}
+property
+{
+    name = SpawnPoint
+    default = Professions
+    enum = Professions
+}
+objecttype
+{
+    name = SpawnPoint
+}
 property
 {
     name = FaceDirection
@@ -79,12 +140,35 @@ objecttype
 {
     name = DeepForest
 }
+objecttype
+{
+    name = WorldGen
+}
 
+objecttype
+{
+    name = Foraging_None
+}
+objecttype
+{
+    name = Water
+}
+objecttype
+{
+    name = WaterNoFish
+}
+objecttype
+{
+    name = ForagingNav
+}
 objecttype
 {
     name = Nav
 }
-
+objecttype
+{
+    name = Ranch
+}
 objecttype
 {
     name = Vegitation
@@ -109,12 +193,12 @@ objecttype
 {
     name = FarmLand
 }
-
-objecttype
+objectgroup
 {
     name = Ranch
+    color = #ff8000
+    defaulttype = Ranch
 }
-
 objectgroup
 {
     name = ParkingStall
@@ -131,13 +215,6 @@ objectgroup
 
 objectgroup
 {
-    name = Ranch
-    color = #ff8000
-    defaulttype = Ranch
-}
-
-objectgroup
-{
     name = Forest
     color = #00aa00
     defaulttype = Forest
@@ -149,6 +226,12 @@ objectgroup
     color = #55aaff
     defaulttype = Nav
 }
+objectgroup
+{
+    name = ForagingNav
+    color = #66ddff
+    defaulttype = ForagingNav
+}
 
 objectgroup
 {
@@ -156,7 +239,30 @@ objectgroup
     color = #003500
     defaulttype = DeepForest
 }
-
+objectgroup
+{
+    name = Foraging_None
+    color = #000000
+    defaulttype = Foraging_None
+}
+objectgroup
+{
+    name = Water
+    color = #0006ff
+    defaulttype = Water
+}
+objectgroup
+{
+    name = WaterNoFish
+    color = #6ad600
+    defaulttype = WaterNoFish
+}
+objectgroup
+{
+    name = WorldGen
+    color = #353500
+    defaulttype = WorldGen
+}
 objectgroup
 {
     name = Vegitation
@@ -196,6 +302,20 @@ property
 {
     name = WaterSpeed
     default = 0.0
+}
+property
+{
+    name = Rocks
+    default = false
+}
+template
+{
+    name = WorldGen
+    property
+    {
+        name = Rocks
+        value = false
+    }
 }
 
 template
@@ -394,6 +514,11 @@ enum
         Church
         Office
         Factory
+        MovieTheater
+        Basement
+        Bunker
+        House
+        Commercial
     ]
     multi = false
 }
@@ -438,51 +563,64 @@ objectgroup
     defaulttype = RoomTone
 }
 
+
+
 enum
 {
-    name = Professions
+    name = AnimalAction
     values = [
-    accountant
-    bookkeeper
-    burglar
-    cashier
-    chef
-    constructionworker
-    cook
-    customerservice
-    doctor
-    drugdealer
-    farmer
-    fastfoodcook
-    fireofficer
-    itworker
-    janitor
-    militaryofficer
-    militarysoldier
-    nurse
-    officeworker
-    parkranger
-    policeofficer
-    salesperson
-    secretary
-    securityguard
-    shopclerk
-    teacher
-    truckdriver
-    unemployed
-    waiter
+        Eat
+        Sleep
+        Follow
     ]
     multi = false
 }
 
 enum
 {
+    name = Animal
+    values = [
+        small
+        medium
+        large
+        predator
+        deer
+        rabbit
+    ]
+    multi = false
+}
+
+property
+{
+    name = Action
+    default =
+    enum = AnimalAction
+}
+enum
+{
     name = Ranch
     values = [
 	chicken
+	chickensmall
+	chickenbig
 	cow
+	cowlarge
 	pig
+	pigsmall
+	piglarge
+	pigonlyone
 	sheep
+	sheepsmall
+	sheeplarge
+	turkey
+	turkeylarge
+	turkeysmall
+	rabbit
+	rabbitsmall
+	notchicken
+	notchickenlarge
+	poultry
+	poultrylarge
     ]
     multi = false
 }
@@ -490,10 +628,69 @@ enum
 property
 {
     name = Ranch
-    default = all
+    default = notchickenlarge
     enum = Ranch
 }
+property
+{
+    name = AnimalType
+    default =
+    enum = Animal
+}
 
+property
+{
+    name = SpawnAnimals
+    default = true
+}
+
+property
+{
+    name = Access
+    default = 
+    description = Name of basement access file.
+}
+
+objecttype
+{
+    name = Animal
+}
+
+objectgroup
+{
+    name = Animal
+    defaulttype = Animal
+}
+
+
+
+property
+{
+    name = StairDirection
+    default = N
+    enum = Direction
+}
+
+property
+{
+    name = StairX
+    default = 0
+}
+
+property
+{
+    name = StairY
+    default = 0
+}
+
+template
+{
+    name = Basement
+    property
+    {
+        name = StairDirection
+        value = N
+    }
     property
     {
         name = StairX
@@ -504,11 +701,12 @@ property
         name = StairY
         value = 0
     }
-	    property
+	property
     {
-        name = StairDirection
-        value = N
+        name = Access
+        value = 
     }
+}
 
 objecttype
 {
@@ -518,47 +716,7 @@ objecttype
 objectgroup
 {
     name = Basement
-    color = #00ffee
     defaulttype = Basement
 }
-
-property
-{
-        name = StairX
-        value = 0
-}
-
-property
-{
-        name = StairY
-        value = 0
-}
-
-property
-{
-        name = StairDirection
-        value = N
-}
-
-template
-{
-    name = Basement
-    property
-    {
-        name = StairX
-        value = 0
-    }
-    property
-    {
-        name = StairY
-        value = 0
-    }
-	    property
-    {
-        name = StairDirection
-        value = N
-    }
-}
-
 
 
